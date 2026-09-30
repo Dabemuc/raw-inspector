@@ -1,0 +1,44 @@
+# RAW-Inspector
+
+The easiest and quickest way to inspect the structure and contents of a RAW image file.
+
+RAW-Inspector is a purely client-side web app: files are parsed in the browser and never leave your machine. There is no backend.
+
+Built with [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/) and [Vite](https://vite.dev/), deployed as a static site on [Cloudflare Pages](https://pages.cloudflare.com/).
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build     # type-check and build into ./dist
+npm run preview   # serve the production build locally
+```
+
+## Deploy to Cloudflare Pages
+
+### Option A: Git integration (recommended)
+
+Connect the repository in the Cloudflare dashboard (Workers & Pages → Create → Pages → Connect to Git) with:
+
+| Setting                | Value           |
+| ---------------------- | --------------- |
+| Framework preset       | Vue             |
+| Build command          | `npm run build` |
+| Build output directory | `dist`          |
+
+### Option B: Direct upload via Wrangler
+
+```bash
+npx wrangler login
+npm run pages:deploy
+```
+
+`npm run pages:dev` runs the production build locally on the Cloudflare Pages runtime.
+
+Pages configuration lives in `wrangler.toml`; static response headers in `public/_headers`.

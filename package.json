@@ -1,0 +1,30 @@
+{
+  "name": "raw-inspector",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "pages:dev": "npm run build && wrangler pages dev",
+    "pages:deploy": "npm run build && wrangler pages deploy"
+  },
+  "dependencies": {
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/tsconfig": "^0.9.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vue-tsc": "^3.3.11",
+    "wrangler": "^4.145.0"
+  },
+  "description": "The easiest and quickest way to inspect the structure and contents of a RAW image file.",
+  "allowScripts": {
+    "workerd@1.20260930.2": true,
+    "esbuild@0.28.1": true
+  }
+}
