@@ -2,19 +2,27 @@
 import { ref } from 'vue'
 import PlaceholderPanel from './components/PlaceholderPanel.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
+import CameraPanel from './components/CameraPanel.vue'
+import DecodePanel from './components/DecodePanel.vue'
+import { useRawDecode } from './composables/useRawDecode'
 import { useStructureParser } from './composables/useStructureParser'
 
 const parser = useStructureParser()
 const { status, result, error } = parser
 
+const decoder = useRawDecode()
+const currentFile = ref<File | null>(null)
+
 const input = ref<HTMLInputElement | null>(null)
 const fileName = ref('')
 const dragging = ref(false)
-const tab = ref<'hex' | 'previews'>('hex')
+const tab = ref<'hex' | 'previews' | 'image'>('hex')
 
 function load(file: File | undefined) {
   if (!file) return
   fileName.value = file.name
+  currentFile.value = file
+  decoder.cancel()
   parser.parse(file)
 }
 
@@ -111,9 +119,38 @@ function onDrop(event: DragEvent) {
             >
               Previews
             </button>
+            <button
+              type="button"
+              role="tab"
+              data-testid="tab-image"
+              :aria-selected="tab === 'image'"
+              @click="tab = 'image'"
+            >
+              Decoded image
+            </button>
           </div>
           <PlaceholderPanel v-if="tab === 'hex'" title="Hex viewer" />
-          <PlaceholderPanel v-else title="Previews" />
+          <PlaceholderPanel v-else-if="tab === 'previews'" title="Previews" />
+          <PlaceholderPanel v-else title="Decoded image">
+            <DecodePanel
+              :status="decoder.status.value"
+              :progress="decoder.progress.value"
+              :image="decoder.image.value"
+              :error="decoder.error.value"
+              :file-name="fileName"
+              @decode="
+                (options) => currentFile && decoder.decode(currentFile, options)
+              "
+              @cancel="decoder.cancel()"
+            />
+          </PlaceholderPanel>
+          <PlaceholderPanel
+            v-if="tab === 'image'"
+            class="camera-panel"
+            title="Camera & colour"
+          >
+            <CameraPanel :metadata="decoder.metadata.value" />
+          </PlaceholderPanel>
         </div>
       </div>
     </template>
@@ -190,6 +227,9 @@ function onDrop(event: DragEvent) {
 .area-detail {
   grid-area: detail;
   min-width: 0;
+}
+.camera-panel {
+  margin-top: 12px;
 }
 .tabs {
   display: flex;
