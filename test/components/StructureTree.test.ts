@@ -26,9 +26,9 @@ describe('StructureTree', () => {
 
   it('expands and collapses', async () => {
     const w = mount(StructureTree)
-    const ifd = w.findAll('[data-testid="tree-row"]').find((r) =>
-      r.text().includes('IFD0'),
-    )!
+    const ifd = w
+      .findAll('[data-testid="tree-row"]')
+      .find((r) => r.text().includes('IFD0'))!
     await ifd.find('[data-testid="tree-toggle"]').trigger('click')
     expect(labels(w).some((t) => t.includes('ImageWidth'))).toBe(true)
     await ifd.find('[data-testid="tree-toggle"]').trigger('click')
