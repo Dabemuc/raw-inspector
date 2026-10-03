@@ -10,7 +10,9 @@ const scope = self as unknown as {
 scope.onmessage = async ({ data }) => {
   if (data.type !== 'parse') return
   try {
-    const result = await parseFile(createFileReader(data.file))
+    const result = await parseFile(createFileReader(data.file), {
+      fileName: data.file.name,
+    })
     scope.postMessage({ type: 'result', id: data.id, result })
   } catch (error) {
     scope.postMessage({

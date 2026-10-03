@@ -11,6 +11,7 @@ import {
   type ImageProps,
   type Piece,
 } from './imageData'
+import { newMeta, type IfdRecord, type TiffMeta } from './quirks'
 import { formatTagValue, tagName, type TagContext } from './tags'
 import {
   decodeValue,
@@ -53,6 +54,10 @@ function guessVendor(bytes: Uint8Array): string | undefined {
 
 /** Max numeric array elements read for strip/tile tables. */
 const MAX_TABLE_ITEMS = 1 << 16
+const TAG_MAKE = 271
+const TAG_MODEL = 272
+const TAG_DNG_VERSION = 50706
+const TAG_CR2_SLICE = 0xc640
 const TAG_NEW_SUBFILE_TYPE = 254
 const TAG_WIDTH = 256
 const TAG_HEIGHT = 257
@@ -93,6 +98,7 @@ export async function walkTiff(
   reader: RandomAccessReader,
   builder: TreeBuilder,
   rootId: string,
+  meta: TiffMeta = newMeta(),
 ): Promise<boolean> {
   if (reader.size < HEADER_SIZE) return false
   const head = await reader.read(0, HEADER_SIZE)
@@ -103,6 +109,7 @@ export async function walkTiff(
   const magic = hv.u16(2)
   if (!MAGICS.has(magic)) return false
   const firstIfd = hv.u32(4)
+  meta.magic = magic
 
   const headerId = builder.addNode({
     kind: 'header',
@@ -124,7 +131,36 @@ export async function walkTiff(
     length: HEADER_SIZE,
   })
 
-  const w = new Walker(reader, builder, little)
+  if (magic === 42 && reader.size >= 16) {
+    const ext = await reader.read(8, 8)
+    if (ext[0] === 0x43 && ext[1] === 0x52) {
+      meta.cr2 = true
+      const ev = new ByteView(ext, little)
+      const rawIfdOffset = ev.u32(4)
+      const extId = builder.addNode({
+        kind: 'header',
+        label: 'CR2 Header',
+        offset: 8,
+        length: 8,
+        parentId: rootId,
+        details: {
+          magic: 'CR',
+          majorVersion: ext[2]!,
+          minorVersion: ext[3]!,
+          version: `${ext[2]}.${ext[3]}`,
+          rawIfdOffset,
+        },
+      })
+      builder.addRegion({
+        nodeId: extId,
+        kind: 'header',
+        offset: 8,
+        length: 8,
+      })
+    }
+  }
+
+  const w = new Walker(reader, builder, little, meta)
   if (firstIfd === 0) {
     w.report(headerId, 'warning', 'Header has no first IFD (offset 0)')
     return true
@@ -142,7 +178,15 @@ class Walker {
   /** Live node table of the builder (build() returns it by reference). */
   private readonly nodes: Record<string, StructureNode>
 
-  constructor(reader: RandomAccessReader, b: TreeBuilder, little: boolean) {
+  private readonly meta: TiffMeta
+
+  constructor(
+    reader: RandomAccessReader,
+    b: TreeBuilder,
+    little: boolean,
+    meta: TiffMeta,
+  ) {
+    this.meta = meta
     this.reader = reader
     this.b = b
     this.little = little
@@ -286,7 +330,17 @@ class Walker {
     for (let i = 0; i < count; i++) {
       await this.walkEntry(ifdId, table, offset, i, depth, tags, context)
     }
-    await this.addImageData(ifdId, label, tags)
+    const classes = await this.addImageData(ifdId, label, tags)
+    const record: IfdRecord = {
+      nodeId: ifdId,
+      label,
+      topLevel: depth === 0,
+    }
+    const role = classes.includes('raw') ? 'raw' : classes[0]
+    if (role) record.role = role
+    const slice = await this.numbers(tags.get(TAG_CR2_SLICE))
+    if (slice) record.cr2Slice = slice
+    this.meta.ifds.push(record)
     return { offset: table.u32(length - 4), pointerAt: offset + length - 4 }
   }
 
@@ -379,6 +433,8 @@ class Walker {
         decodeValue(info.name, info.size, count, bytes, this.little),
       ) ?? raw
 
+    if (depth === 0 && context === 'tiff')
+      this.collectMeta(tag, bytes, info, count)
     if (!isMakerNote) {
       tags.set(tag, {
         type: info.name,
@@ -397,6 +453,23 @@ class Walker {
       if (info.name !== 'LONG' && info.name !== 'IFD') return
       await this.descend(entryId, tag, subName, dataOffset, count, depth)
     }
+  }
+
+  private collectMeta(
+    tag: number,
+    bytes: Uint8Array,
+    info: { name: string; size: number },
+    count: number,
+  ): void {
+    if (tag === TAG_DNG_VERSION) this.meta.dng = true
+    if ((tag !== TAG_MAKE && tag !== TAG_MODEL) || info.name !== 'ASCII') return
+    const value = decodeValue(info.name, info.size, count, bytes, this.little)
+    const text = ('text' in value ? String(value.text) : '')
+      .replace(/\0.*$/s, '')
+      .trim()
+    if (!text) return
+    if (tag === TAG_MAKE) this.meta.make ??= text
+    else this.meta.model ??= text
   }
 
   private subIfdContext(tag: number): TagContext {
@@ -522,7 +595,8 @@ class Walker {
     ifdId: string,
     ifdLabel: string,
     tags: IfdTags,
-  ): Promise<void> {
+  ): Promise<ImageClass[]> {
+    const classes: ImageClass[] = []
     const first = async (tag: number) =>
       (await this.numbers(tags.get(tag)))?.[0]
     const props: ImageProps = {
@@ -562,7 +636,15 @@ class Walker {
       const pieces = offsets
         .slice(0, lengths.length)
         .map((offset, i) => ({ offset, length: lengths[i]! }))
-      await this.emitImage(ifdId, ifdLabel, unit, pieces, props, false)
+      const cls = await this.emitImage(
+        ifdId,
+        ifdLabel,
+        unit,
+        pieces,
+        props,
+        false,
+      )
+      if (cls) classes.push(cls)
     }
 
     const jpegOff = tags.get(TAG_JPEG_OFFSET)
@@ -576,7 +658,7 @@ class Walker {
           'JPEGInterchangeFormat needs a numeric JPEGInterchangeFormatLength',
         )
       } else {
-        await this.emitImage(
+        const cls = await this.emitImage(
           ifdId,
           ifdLabel,
           'JPEG',
@@ -584,8 +666,10 @@ class Walker {
           { ...props, compression: undefined, interchangeJpeg: true },
           true,
         )
+        if (cls) classes.push(cls)
       }
     }
+    return classes
   }
 
   private async emitImage(
@@ -595,7 +679,7 @@ class Walker {
     pieces: Piece[],
     props: ImageProps,
     interchange: boolean,
-  ): Promise<void> {
+  ): Promise<ImageClass | undefined> {
     const size = this.reader.size
     const valid: Piece[] = []
     const problems: { piece: Piece; index: number }[] = []
@@ -604,7 +688,7 @@ class Walker {
       if (p.offset + p.length > size) problems.push({ piece: p, index })
       else valid.push(p)
     })
-    if (valid.length === 0 && problems.length === 0) return
+    if (valid.length === 0 && problems.length === 0) return undefined
 
     const jpeg = isJpegCompression(props)
     let width = props.width
@@ -705,5 +789,6 @@ class Walker {
         this.b.addPreview(preview)
       }
     }
+    return cls
   }
 }

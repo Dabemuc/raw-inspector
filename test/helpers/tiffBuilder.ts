@@ -132,11 +132,14 @@ export interface TiffBuilderOptions {
   byteOrder?: ByteOrder
   /** 42 by default; 0x4f52/0x5352 for ORF, 0x55 for RW2. */
   magic?: number
+  /** Bytes placed right after the 8-byte header (e.g. the CR2 extension); IFDs start after them. */
+  headerExtra?: number[]
 }
 
 export class TiffBuilder {
   readonly byteOrder: ByteOrder
   readonly magic: number
+  private readonly headerExtra: number[]
   private readonly ifds: IfdBuilder[] = []
   private readonly blobs: Blob[] = []
   private rawFirstIfdOffset: number | undefined
@@ -145,6 +148,7 @@ export class TiffBuilder {
   constructor(options: TiffBuilderOptions = {}) {
     this.byteOrder = options.byteOrder ?? 'II'
     this.magic = options.magic ?? 42
+    this.headerExtra = options.headerExtra ?? []
   }
 
   /** Create an IFD. The first one created is the file's first IFD. */
@@ -180,7 +184,7 @@ export class TiffBuilder {
     )
 
     // Layout: header, then per IFD its table + out-of-line values, then blobs.
-    let pos = 8
+    let pos = 8 + this.headerExtra.length
     const ifdLayouts: IfdLayout[] = []
     const ifdMap = new Map<IfdBuilder, IfdLayout>()
     this.ifds.forEach((ifd, i) => {
@@ -238,6 +242,7 @@ export class TiffBuilder {
       little,
     )
 
+    out.set(this.headerExtra, 8)
     this.ifds.forEach((ifd, i) => {
       const il = ifdLayouts[i]!
       view.setUint16(il.offset, ifd.entries.length, little)
