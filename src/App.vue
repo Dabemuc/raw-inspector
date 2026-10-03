@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import HexViewer from './components/HexViewer.vue'
+import PreviewGallery from './components/PreviewGallery.vue'
 import PlaceholderPanel from './components/PlaceholderPanel.vue'
 import StructureTree from './components/StructureTree.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
@@ -143,7 +144,13 @@ function onDrop(event: DragEvent) {
             <HexViewer v-if="reader" :reader="reader" />
             <PlaceholderPanel v-else title="Hex viewer" />
           </template>
-          <PlaceholderPanel v-else-if="tab === 'previews'" title="Previews" />
+          <PlaceholderPanel v-else-if="tab === 'previews'" title="Previews">
+            <PreviewGallery
+              v-if="reader"
+              :reader="reader"
+              :file-name="fileName"
+            />
+          </PlaceholderPanel>
           <PlaceholderPanel v-else title="Decoded image">
             <DecodePanel
               :status="decoder.status.value"
