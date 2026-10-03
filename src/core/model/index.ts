@@ -1,0 +1,5 @@
+export type * from './types'
+export { TreeBuilder } from './tree-builder'
+export type { NewNode } from './tree-builder'
+export { findSmallestNodeAt, ancestorsOf } from './helpers'
+export { exampleResult } from './example'
