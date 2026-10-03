@@ -3,7 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryReader } from '../../src/core/io'
 import type { ParseResult, StructureNode } from '../../src/core/model'
 import { parseFile } from '../../src/parsers'
-import { ifdOffset, TiffBuilder, type TiffType } from '../helpers/tiffBuilder'
+import {
+  blobLength,
+  blobOffset,
+  ifdOffset,
+  TiffBuilder,
+  type TiffType,
+} from '../helpers/tiffBuilder'
 
 const parse = (bytes: Uint8Array) => parseFile(createMemoryReader(bytes))
 const nodesOf = (r: ParseResult, kind: string): StructureNode[] =>
@@ -424,4 +430,178 @@ describe('fixtures', () => {
       ).toBe(true)
     }
   })
+})
+
+describe('image data regions', () => {
+  // SOI, SOF0 (8-bit, 24x32 -> height 24? see below), EOI
+  const jpeg = (w: number, h: number) => [
+    0xff,
+    0xd8,
+    0xff,
+    0xc0,
+    0,
+    11,
+    8,
+    h >> 8,
+    h & 255,
+    w >> 8,
+    w & 255,
+    1,
+    1,
+    0x11,
+    0,
+    0xff,
+    0xd9,
+  ]
+  const regionsOf = (r: ParseResult, kind: string) =>
+    r.regions.filter((x) => x.kind === kind)
+
+  it('merges contiguous strips into one region', async () => {
+    const t = new TiffBuilder()
+    const a = t.blob([1, 2, 3, 4])
+    const b = t.blob([5, 6, 7, 8])
+    t.ifd()
+      .entry(0x103, 'SHORT', [1])
+      .entry(0x106, 'SHORT', [32803])
+      .entry(273, 'LONG', [blobOffset(a), blobOffset(b)])
+      .entry(279, 'LONG', [blobLength(a), blobLength(b)])
+    const r = await parse(t.build().bytes)
+    const [node] = nodesOf(r, 'image-data').filter((n) => n.childIds.length)
+    expect(node!.childIds).toHaveLength(2)
+    const regs = regionsOf(r, 'raw-data')
+    expect(regs).toHaveLength(1)
+    expect(regs[0]).toMatchObject({ length: 8, nodeId: node!.id })
+  })
+
+  it('keeps non-contiguous strips as separate regions', async () => {
+    const t = new TiffBuilder()
+    const a = t.blob([1, 2, 3, 4])
+    t.blob([9, 9])
+    const c = t.blob([5, 6, 7, 8])
+    t.ifd()
+      .entry(0x106, 'SHORT', [32803])
+      .entry(273, 'LONG', [blobOffset(a), blobOffset(c)])
+      .entry(279, 'LONG', [4, 4])
+    const r = await parse(t.build().bytes)
+    expect(regionsOf(r, 'raw-data')).toHaveLength(2)
+  })
+
+  it('handles tiles', async () => {
+    const t = new TiffBuilder()
+    const a = t.blob([1, 2, 3, 4])
+    t.ifd()
+      .entry(0x106, 'SHORT', [32803])
+      .entry(324, 'LONG', [blobOffset(a)])
+      .entry(325, 'LONG', [blobLength(a)])
+    const r = await parse(t.build().bytes)
+    const node = nodesOf(r, 'image-data')[0]!
+    expect(node.details).toMatchObject({ pieceKind: 'Tile', pieceCount: 1 })
+    expect(node.childIds.map((id) => r.nodes[id]!.label)).toEqual(['Tile 0'])
+    expect(regionsOf(r, 'raw-data')).toHaveLength(1)
+  })
+
+  it('lists a JPEGInterchangeFormat thumbnail with SOF size', async () => {
+    const t = new TiffBuilder()
+    const j = t.blob(jpeg(160, 120))
+    t.ifd()
+      .entry(513, 'LONG', [blobOffset(j)])
+      .entry(514, 'LONG', [blobLength(j)])
+    const built = t.build()
+    const r = await parse(built.bytes)
+    expect(nodesOf(r, 'thumbnail')).toHaveLength(2)
+    expect(regionsOf(r, 'thumbnail')).toEqual([
+      expect.objectContaining({
+        offset: built.layout.blobs[0]!.offset,
+        length: 17,
+      }),
+    ])
+    expect(r.previews).toEqual([
+      {
+        nodeId: nodesOf(r, 'thumbnail')[0]!.id,
+        offset: built.layout.blobs[0]!.offset,
+        length: 17,
+        width: 160,
+        height: 120,
+        mime: 'image/jpeg',
+      },
+    ])
+  })
+
+  it('classifies large JPEGs as previews using IFD dimensions', async () => {
+    const t = new TiffBuilder()
+    const j = t.blob(jpeg(1, 1))
+    t.ifd()
+      .entry(254, 'LONG', [1])
+      .entry(256, 'LONG', [1024])
+      .entry(257, 'LONG', [768])
+      .entry(259, 'SHORT', [7])
+      .entry(258, 'SHORT', [8, 8, 8])
+      .entry(273, 'LONG', [blobOffset(j)])
+      .entry(279, 'LONG', [blobLength(j)])
+    const r = await parse(t.build().bytes)
+    expect(nodesOf(r, 'preview').length).toBeGreaterThan(0)
+    expect(r.previews[0]).toMatchObject({ width: 1024, height: 768 })
+  })
+
+  it('warns when a JPEG does not start with FFD8', async () => {
+    const t = new TiffBuilder()
+    const j = t.blob([1, 2, 3, 4, 5, 6])
+    t.ifd()
+      .entry(513, 'LONG', [blobOffset(j)])
+      .entry(514, 'LONG', [blobLength(j)])
+    const r = await parse(t.build().bytes)
+    const n = nodesOf(r, 'preview')[0]!
+    expect(n.status).toBe('warning')
+    expect(n.messages.join()).toMatch(/FFD8/)
+  })
+
+  it('flags offsets past EOF as broken', async () => {
+    const t = new TiffBuilder()
+    const a = t.blob([1, 2, 3, 4])
+    t.ifd()
+      .entry(0x106, 'SHORT', [32803])
+      .entry(273, 'LONG', [blobOffset(a), 100000])
+      .entry(279, 'LONG', [4, 4])
+    const r = await parse(t.build().bytes)
+    const node = nodesOf(r, 'image-data')[0]!
+    const kids = node.childIds.map((id) => r.nodes[id]!)
+    expect(kids.map((k) => k.status)).toEqual(['ok', 'broken'])
+    expect(regionsOf(r, 'raw-data')).toHaveLength(1)
+  })
+
+  it('warns on mismatched array lengths', async () => {
+    const t = new TiffBuilder()
+    const a = t.blob([1, 2, 3, 4])
+    t.ifd()
+      .entry(0x106, 'SHORT', [32803])
+      .entry(273, 'LONG', [blobOffset(a), blobOffset(a)])
+      .entry(279, 'LONG', [4])
+    const r = await parse(t.build().bytes)
+    expect(r.warnings.some((w) => /differ in length/.test(w.message))).toBe(
+      true,
+    )
+    expect(nodesOf(r, 'image-data')[0]!.details!.pieceCount).toBe(1)
+  })
+
+  const files = existsSync(new URL('../../fixtures/', import.meta.url))
+    ? readdirSync(new URL('../../fixtures/', import.meta.url)).filter((f) =>
+        /\.(dng|arw|nef|cr2)$/i.test(f),
+      )
+    : []
+  it.skipIf(files.length === 0)(
+    'real samples have raw data and a preview',
+    async () => {
+      for (const file of files) {
+        const bytes = readFileSync(
+          new URL(`../../fixtures/${file}`, import.meta.url),
+        )
+        const r = await parse(new Uint8Array(bytes))
+        expect(r.previews.length, file).toBeGreaterThanOrEqual(1)
+        expect(
+          r.regions.filter((x) => x.kind === 'raw-data').length,
+          file,
+        ).toBeGreaterThanOrEqual(1)
+      }
+    },
+  )
 })
