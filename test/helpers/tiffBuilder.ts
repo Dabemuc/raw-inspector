@@ -280,7 +280,9 @@ function valueCount(e: Entry): number {
 }
 
 function encodedLength(e: Entry): number {
-  return valueCount(e) * TYPE_INFO[e.type].size
+  // RATIONAL values are flattened (num, den) pairs of 4-byte numbers.
+  const isRational = e.type === 'RATIONAL' || e.type === 'SRATIONAL'
+  return valueCount(e) * (isRational ? 4 : TYPE_INFO[e.type].size)
 }
 
 function encodeValues(
