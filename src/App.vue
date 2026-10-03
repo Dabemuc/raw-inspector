@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import PlaceholderPanel from './components/PlaceholderPanel.vue'
+import StructureTree from './components/StructureTree.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
+import { useSelection } from './composables/useSelection'
 import { useStructureParser } from './composables/useStructureParser'
 
 const parser = useStructureParser()
 const { status, result, error } = parser
+const { setParseResult } = useSelection()
+watch(result, (r) => setParseResult(r), { immediate: true })
 
 const input = ref<HTMLInputElement | null>(null)
 const fileName = ref('')
@@ -92,7 +96,7 @@ function onDrop(event: DragEvent) {
       <SummaryHeader :file-name="fileName" :result="result" @open="pick" />
       <div class="layout">
         <PlaceholderPanel class="area-map" title="Byte map" />
-        <PlaceholderPanel class="area-tree" title="Structure" />
+        <StructureTree class="area-tree" />
         <div class="area-detail">
           <div class="tabs" role="tablist">
             <button
