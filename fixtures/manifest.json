@@ -1,0 +1,59 @@
+{
+  "baseUrl": "https://raw.pixls.us/download/data/",
+  "samples": [
+    {
+      "name": "leica-m8.dng",
+      "format": "DNG",
+      "camera": "Leica M8",
+      "path": "Leica/M8/L1030132.DNG",
+      "sha256": "7fdcca2371bb07fbf9483fcb08e3b5ab093eca1ca3924cbc86d6863736c31153",
+      "size": 10575296,
+      "header": "49492a0008000000"
+    },
+    {
+      "name": "sony-a100.arw",
+      "format": "ARW",
+      "camera": "Sony DSLR-A100",
+      "path": "Sony/DSLR-A100/_DSC0258.ARW",
+      "sha256": "4df7981ac4baec9648b4f106751ea4b09a6e27bc70a15f8ef09bec051fec362d",
+      "size": 10137572,
+      "header": "49492a0008000000"
+    },
+    {
+      "name": "nikon-d70.nef",
+      "format": "NEF",
+      "camera": "Nikon D70",
+      "path": "Nikon/D70/20170902_0047.NEF",
+      "sha256": "dd6405aeb33b0cd5bf66c98ba98ccbb478a765450cfd130810e470dab8d1f4b4",
+      "size": 5488179,
+      "header": "4d4d002a00000008"
+    },
+    {
+      "name": "canon-350d.cr2",
+      "format": "CR2",
+      "camera": "Canon EOS 350D",
+      "path": "Canon/EOS%20350D/IMG_1707.CR2",
+      "sha256": "8cbb84e04d93b005fe082da9c954122a612b5281af00aa088d767850f343fd38",
+      "size": 10586467,
+      "header": "49492a0010000000"
+    },
+    {
+      "name": "olympus-e1.orf",
+      "format": "ORF",
+      "camera": "Olympus E-1",
+      "path": "Olympus/E-1/E_1__C106743_gredos.ORF",
+      "sha256": "042286653fbae5b085bef4a4e626145385ea6e82e817f166b4904abcef64457c",
+      "size": 10661632,
+      "header": "4949524f08000000"
+    },
+    {
+      "name": "panasonic-lx3.rw2",
+      "format": "RW2",
+      "camera": "Panasonic Lumix DMC-LX3",
+      "path": "Panasonic/DMC-LX3/Lumix_LX3_16_9.rw2",
+      "sha256": "bc8d4795a5604d605daf8cbffb7dbbadaf5c3f4e6472d88f12fea00bf90f78fa",
+      "size": 10952704,
+      "header": "4949550018000000"
+    }
+  ]
+}

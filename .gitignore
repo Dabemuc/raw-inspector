@@ -26,3 +26,8 @@ dist-ssr
 # Cloudflare
 .wrangler
 .dev.vars
+
+# Real RAW fixtures (downloaded via `npm run fixtures`)
+fixtures/*
+!fixtures/manifest.json
+!fixtures/README.md
