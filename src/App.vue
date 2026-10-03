@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import ByteMap from './components/ByteMap.vue'
 import HexViewer from './components/HexViewer.vue'
 import PreviewGallery from './components/PreviewGallery.vue'
 import PlaceholderPanel from './components/PlaceholderPanel.vue'
@@ -110,7 +111,7 @@ function onDrop(event: DragEvent) {
     <template v-else-if="result">
       <SummaryHeader :file-name="fileName" :result="result" @open="pick" />
       <div class="layout">
-        <PlaceholderPanel class="area-map" title="Byte map" />
+        <ByteMap class="area-map" />
         <StructureTree class="area-tree" />
         <div class="area-detail">
           <div class="tabs" role="tablist">

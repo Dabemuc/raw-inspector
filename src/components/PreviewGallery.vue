@@ -35,7 +35,9 @@ async function load() {
     previews.map(async (preview): Promise<Card> => {
       try {
         const bytes = await props.reader.read(preview.offset, preview.length)
-        const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: preview.mime })
+        const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {
+          type: preview.mime,
+        })
         return { preview, url: URL.createObjectURL(blob), error: null }
       } catch (e) {
         return {
