@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { collectIssues } from '../core/model'
 import type { ParseResult } from '../core/model'
 
 const props = defineProps<{ fileName: string; result: ParseResult }>()
-defineEmits<{ open: [] }>()
+defineEmits<{ open: []; 'show-warnings': [] }>()
 
 const camera = computed(() => {
   const f = props.result.format
   return [f?.make, f?.model].filter(Boolean).join(' ') || 'Unknown'
 })
+
+const issueCount = computed(() => collectIssues(props.result).length)
 
 const size = computed(() => formatSize(props.result.fileSize))
 
@@ -44,7 +47,17 @@ function formatSize(bytes: number): string {
       </div>
       <div>
         <dt>Warnings</dt>
-        <dd data-testid="summary-warnings">{{ result.warnings.length }}</dd>
+        <dd>
+          <button
+            type="button"
+            class="badge"
+            :class="{ has: issueCount > 0 }"
+            data-testid="summary-warnings"
+            @click="$emit('show-warnings')"
+          >
+            {{ issueCount }}
+          </button>
+        </dd>
       </div>
     </dl>
     <button type="button" data-testid="open-another" @click="$emit('open')">
@@ -82,7 +95,11 @@ dd {
   margin: 0;
   color: var(--text-h);
 }
-button {
+[data-testid='open-another'] {
   margin-left: auto;
+}
+.badge.has {
+  border-color: var(--accent);
+  font-weight: 600;
 }
 </style>

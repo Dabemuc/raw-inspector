@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { collectIssues } from '../src/core/model'
 import { ref, shallowRef } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ParseResult } from '../src/core/model'
@@ -9,6 +10,7 @@ const parse = vi.fn()
 const status = ref<ParserStatus>('idle')
 const result = shallowRef<ParseResult | null>(null)
 const error = ref<string | null>(null)
+const errorKind = ref<string | null>(null)
 
 vi.mock('../src/composables/useStructureParser', () => ({
   useStructureParser: () => ({
@@ -17,6 +19,7 @@ vi.mock('../src/composables/useStructureParser', () => ({
     status,
     result,
     error,
+    errorKind,
   }),
 }))
 
@@ -28,6 +31,7 @@ describe('App', () => {
     status.value = 'idle'
     result.value = null
     error.value = null
+    errorKind.value = null
   })
 
   it('renders the empty state', () => {
@@ -81,8 +85,33 @@ describe('App', () => {
       exampleResult.format?.name ?? 'Unknown',
     )
     expect(w.find('[data-testid="summary-warnings"]').text()).toBe(
-      String(exampleResult.warnings.length),
+      String(collectIssues(exampleResult).length),
     )
     expect(w.find('[data-testid="open-another"]').exists()).toBe(true)
+  })
+
+  it('shows a worker crash message', () => {
+    status.value = 'error'
+    errorKind.value = 'worker-crash'
+    error.value = 'x'
+    const w = mount(App)
+    expect(w.find('[data-testid="problem-worker-crash"]').exists()).toBe(true)
+  })
+
+  it('shows a banner for unsupported files while keeping the layout', async () => {
+    status.value = 'done'
+    result.value = { ...exampleResult, format: null }
+    const w = mount(App)
+    expect(w.find('[data-testid="problem-unsupported"]').exists()).toBe(true)
+    expect(w.find('[data-testid="summary"]').exists()).toBe(true)
+  })
+
+  it('opens the warnings panel from the header badge', async () => {
+    status.value = 'done'
+    result.value = exampleResult
+    const w = mount(App)
+    expect(w.find('[data-testid="warnings-panel"]').exists()).toBe(false)
+    await w.find('[data-testid="summary-warnings"]').trigger('click')
+    expect(w.find('[data-testid="warnings-panel"]').exists()).toBe(true)
   })
 })

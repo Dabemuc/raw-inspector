@@ -3,8 +3,11 @@ import { computed, ref, watch } from 'vue'
 import HexViewer from './components/HexViewer.vue'
 import PlaceholderPanel from './components/PlaceholderPanel.vue'
 import StructureTree from './components/StructureTree.vue'
+import FileProblem from './components/FileProblem.vue'
+import WarningsPanel from './components/WarningsPanel.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
 import { createFileReader } from './core/io'
+import { fileProblem } from './core/model'
 import { useSelection } from './composables/useSelection'
 import CameraPanel from './components/CameraPanel.vue'
 import DecodePanel from './components/DecodePanel.vue'
@@ -12,7 +15,11 @@ import { useRawDecode } from './composables/useRawDecode'
 import { useStructureParser } from './composables/useStructureParser'
 
 const parser = useStructureParser()
-const { status, result, error } = parser
+const { status, result, error, errorKind } = parser
+const showWarnings = ref(false)
+const problem = computed(() =>
+  result.value ? fileProblem(result.value) : null,
+)
 const { setParseResult } = useSelection()
 watch(result, (r) => setParseResult(r), { immediate: true })
 
@@ -31,6 +38,7 @@ const tab = ref<'hex' | 'previews' | 'image'>('hex')
 function load(file: File | undefined) {
   if (!file) return
   fileName.value = file.name
+  showWarnings.value = false
   currentFile.value = file
   decoder.cancel()
   parser.parse(file)
@@ -101,13 +109,32 @@ function onDrop(event: DragEvent) {
     </main>
 
     <main v-else-if="status === 'error'" class="state" data-testid="error">
-      <h2>Could not parse file</h2>
-      <p>{{ error }}</p>
-      <button type="button" @click="pick">Open another file</button>
+      <FileProblem
+        :problem="errorKind ?? 'read-error'"
+        :detail="error"
+        @open="pick"
+      />
     </main>
 
     <template v-else-if="result">
-      <SummaryHeader :file-name="fileName" :result="result" @open="pick" />
+      <SummaryHeader
+        :file-name="fileName"
+        :result="result"
+        @open="pick"
+        @show-warnings="showWarnings = !showWarnings"
+      />
+      <FileProblem
+        v-if="problem"
+        :problem="problem"
+        :format-name="result.format?.name"
+        :has-result="true"
+        @open="pick"
+      />
+      <WarningsPanel
+        v-if="showWarnings"
+        :result="result"
+        @close="showWarnings = false"
+      />
       <div class="layout">
         <PlaceholderPanel class="area-map" title="Byte map" />
         <StructureTree class="area-tree" />

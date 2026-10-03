@@ -115,9 +115,7 @@ const rows = computed<Row[]>(() => {
   const walk = (id: string, depth: number) => {
     const node = result.nodes[id]
     if (!node || (keep && !keep.has(id))) return
-    const kids = keep
-      ? node.childIds.filter((c) => keep.has(c))
-      : node.childIds
+    const kids = keep ? node.childIds.filter((c) => keep.has(c)) : node.childIds
     const expandable = kids.length > 0
     const open = expandable && (keep ? true : expanded.value.has(id))
     out.push({ node, depth, expandable, expanded: open })
@@ -262,8 +260,8 @@ function onKeydown(event: KeyboardEvent) {
       </button>
     </header>
     <div class="cols head" aria-hidden="true">
-      <span>Label</span><span>Offset</span><span>Length</span>
-      <span>Type</span><span>Value</span>
+      <span>Label</span><span>Offset</span><span>Length</span> <span>Type</span
+      ><span>Value</span>
     </div>
     <div
       ref="scroller"
