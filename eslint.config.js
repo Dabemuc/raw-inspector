@@ -5,7 +5,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', '.sandcastle', '.wrangler', 'node_modules'] },
+  { ignores: ['dist', '.sandcastle', '.wrangler', 'node_modules', 'spikes'] },
   js.configs.recommended,
   tseslint.configs.recommended,
   pluginVue.configs['flat/recommended'],
