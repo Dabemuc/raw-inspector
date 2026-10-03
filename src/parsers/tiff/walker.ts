@@ -2,6 +2,15 @@ import { ByteView, hex, hex16, hex32 } from '../../core/binary'
 import type { RandomAccessReader } from '../../core/io'
 import type { TreeBuilder } from '../../core/model'
 import type { NodeDetails, NodeStatus, StructureNode } from '../../core/model'
+import {
+  classifyImage,
+  findJpegSize,
+  isJpegCompression,
+  mergePieces,
+  type ImageClass,
+  type ImageProps,
+  type Piece,
+} from './imageData'
 import { summarizeValue, summaryByteLength, tiffTypeInfo } from './values'
 
 const HEADER_SIZE = 8
@@ -35,6 +44,37 @@ function guessVendor(bytes: Uint8Array): string | undefined {
   const text = String.fromCharCode(...bytes)
   return MAKERNOTE_VENDORS.find(([sig]) => text.startsWith(sig))?.[1]
 }
+
+/** Max numeric array elements read for strip/tile tables. */
+const MAX_TABLE_ITEMS = 1 << 16
+const TAG_NEW_SUBFILE_TYPE = 254
+const TAG_WIDTH = 256
+const TAG_HEIGHT = 257
+const TAG_BITS_PER_SAMPLE = 258
+const TAG_COMPRESSION = 259
+const TAG_PHOTOMETRIC = 262
+const TAG_STRIP_OFFSETS = 273
+const TAG_STRIP_COUNTS = 279
+const TAG_TILE_OFFSETS = 324
+const TAG_TILE_COUNTS = 325
+const TAG_JPEG_OFFSET = 513
+const TAG_JPEG_LENGTH = 514
+
+/** A readable entry of the IFD being walked. */
+interface TagRef {
+  type: string
+  size: number
+  count: number
+  dataOffset: number
+  entryId: string
+}
+type IfdTags = Map<number, TagRef>
+
+const CLASS_NODE = {
+  raw: { node: 'image-data', region: 'raw-data', label: 'Raw image data' },
+  preview: { node: 'preview', region: 'preview', label: 'Preview' },
+  thumbnail: { node: 'thumbnail', region: 'thumbnail', label: 'Thumbnail' },
+} as const
 
 const MAGICS = new Set([42, 0x4f52, 0x5352, 0x55])
 
@@ -234,9 +274,11 @@ class Walker {
     })
     this.b.addRegion({ nodeId: ifdId, kind: 'ifd', offset, length })
 
+    const tags: IfdTags = new Map()
     for (let i = 0; i < count; i++) {
-      await this.walkEntry(ifdId, table, offset, i, depth)
+      await this.walkEntry(ifdId, table, offset, i, depth, tags)
     }
+    await this.addImageData(ifdId, label, tags)
     return { offset: table.u32(length - 4), pointerAt: offset + length - 4 }
   }
 
@@ -246,6 +288,7 @@ class Walker {
     ifdOffset: number,
     index: number,
     depth: number,
+    tags: IfdTags,
   ): Promise<void> {
     const at = 2 + index * ENTRY_SIZE
     const entryOffset = ifdOffset + at
@@ -326,6 +369,15 @@ class Walker {
       this.little,
     )
 
+    if (!isMakerNote) {
+      tags.set(tag, {
+        type: info.name,
+        size: info.size,
+        count,
+        dataOffset,
+        entryId,
+      })
+    }
     if (isMakerNote) {
       await this.addMakerNote(entryId, dataOffset, byteLength)
       return
@@ -404,5 +456,225 @@ class Walker {
       details,
     })
     this.b.addRegion({ nodeId: id, kind: 'makernote', offset, length })
+  }
+
+  /** Reads an integer tag array (BYTE/SHORT/LONG), capped at MAX_TABLE_ITEMS. */
+  private async numbers(
+    ref: TagRef | undefined,
+  ): Promise<number[] | undefined> {
+    if (!ref || !['BYTE', 'SHORT', 'LONG', 'IFD'].includes(ref.type)) return
+    const n = Math.min(ref.count, MAX_TABLE_ITEMS)
+    const view = new ByteView(
+      await this.reader.read(ref.dataOffset, n * ref.size),
+      this.little,
+    )
+    const out: number[] = []
+    for (let i = 0; i < n; i++) {
+      out.push(
+        ref.size === 1
+          ? view.u8(i)
+          : ref.size === 2
+            ? view.u16(i * 2)
+            : view.u32(i * 4),
+      )
+    }
+    if (ref.count > n) {
+      this.report(
+        ref.entryId,
+        'warning',
+        `Only the first ${n} of ${ref.count} values were read`,
+      )
+    }
+    return out
+  }
+
+  /** Pairs offset/length tags of an IFD into image data nodes and regions. */
+  private async addImageData(
+    ifdId: string,
+    ifdLabel: string,
+    tags: IfdTags,
+  ): Promise<void> {
+    const first = async (tag: number) =>
+      (await this.numbers(tags.get(tag)))?.[0]
+    const props: ImageProps = {
+      newSubfileType: await first(TAG_NEW_SUBFILE_TYPE),
+      compression: await first(TAG_COMPRESSION),
+      photometric: await first(TAG_PHOTOMETRIC),
+      bitsPerSample: await this.numbers(tags.get(TAG_BITS_PER_SAMPLE)),
+      width: await first(TAG_WIDTH),
+      height: await first(TAG_HEIGHT),
+    }
+
+    const groups: [string, number, number][] = [
+      ['Strip', TAG_STRIP_OFFSETS, TAG_STRIP_COUNTS],
+      ['Tile', TAG_TILE_OFFSETS, TAG_TILE_COUNTS],
+    ]
+    for (const [unit, offTag, lenTag] of groups) {
+      const offRef = tags.get(offTag)
+      const lenRef = tags.get(lenTag)
+      if (!offRef && !lenRef) continue
+      const offsets = await this.numbers(offRef)
+      const lengths = await this.numbers(lenRef)
+      if (!offsets || !lengths) {
+        this.report(
+          (offRef ?? lenRef)!.entryId,
+          'warning',
+          `${unit} offsets and byte counts must both be present and numeric`,
+        )
+        continue
+      }
+      if (offsets.length !== lengths.length) {
+        this.report(
+          offRef!.entryId,
+          'warning',
+          `${unit} offsets (${offsets.length}) and byte counts (${lengths.length}) differ in length`,
+        )
+      }
+      const pieces = offsets
+        .slice(0, lengths.length)
+        .map((offset, i) => ({ offset, length: lengths[i]! }))
+      await this.emitImage(ifdId, ifdLabel, unit, pieces, props, false)
+    }
+
+    const jpegOff = tags.get(TAG_JPEG_OFFSET)
+    if (jpegOff) {
+      const offset = (await this.numbers(jpegOff))?.[0]
+      const length = await first(TAG_JPEG_LENGTH)
+      if (offset === undefined || length === undefined) {
+        this.report(
+          jpegOff.entryId,
+          'warning',
+          'JPEGInterchangeFormat needs a numeric JPEGInterchangeFormatLength',
+        )
+      } else {
+        await this.emitImage(
+          ifdId,
+          ifdLabel,
+          'JPEG',
+          [{ offset, length }],
+          { ...props, compression: undefined, interchangeJpeg: true },
+          true,
+        )
+      }
+    }
+  }
+
+  private async emitImage(
+    ifdId: string,
+    ifdLabel: string,
+    unit: string,
+    pieces: Piece[],
+    props: ImageProps,
+    interchange: boolean,
+  ): Promise<void> {
+    const size = this.reader.size
+    const valid: Piece[] = []
+    const problems: { piece: Piece; index: number }[] = []
+    pieces.forEach((p, index) => {
+      if (p.length === 0) return
+      if (p.offset + p.length > size) problems.push({ piece: p, index })
+      else valid.push(p)
+    })
+    if (valid.length === 0 && problems.length === 0) return
+
+    const jpeg = isJpegCompression(props)
+    let width = props.width
+    let height = props.height
+    const merged = mergePieces(valid)
+    // Reading the JPEG start serves the FFD8 check and the SOF fallback.
+    const jpegStart = valid.length
+      ? [...valid].sort((a, b) => a.offset - b.offset)[0]!
+      : undefined
+    let head: Uint8Array | undefined
+    if (jpeg && jpegStart && (interchange || merged.length === 1)) {
+      head = await this.reader.read(
+        jpegStart.offset,
+        Math.min(jpegStart.length, 65536),
+      )
+      if (width === undefined || height === undefined) {
+        const sof = findJpegSize(head)
+        if (sof) ({ width, height } = sof)
+      }
+    }
+    const cls: ImageClass = classifyImage({ ...props, width, height })
+    const meta = CLASS_NODE[cls]
+    const total = valid.reduce((n, p) => n + p.length, 0)
+    const start = valid.length
+      ? Math.min(...valid.map((p) => p.offset))
+      : Math.min(...problems.map((p) => p.piece.offset))
+    const details: NodeDetails = {
+      pieceKind: unit,
+      pieceCount: pieces.length,
+      byteLength: total,
+    }
+    const set = (k: string, v: number | undefined) => {
+      if (v !== undefined) details[k] = v
+    }
+    set('width', width)
+    set('height', height)
+    set('compression', props.compression)
+    set('photometric', props.photometric)
+    set('newSubfileType', props.newSubfileType)
+    if (props.bitsPerSample)
+      details.bitsPerSample = props.bitsPerSample.join(',')
+    const nodeId = this.b.addNode({
+      kind: meta.node,
+      label: `${ifdLabel} ${meta.label}`,
+      offset: start,
+      length: total,
+      parentId: ifdId,
+      details,
+    })
+    for (const [i, p] of pieces.entries()) {
+      if (p.length === 0) continue
+      const bad = p.offset + p.length > size
+      const id = this.b.addNode({
+        kind: meta.node,
+        label: unit === 'JPEG' ? 'JPEG data' : `${unit} ${i}`,
+        offset: p.offset,
+        length: p.length,
+        parentId: nodeId,
+      })
+      if (bad) {
+        this.report(
+          id,
+          'broken',
+          `${unit} data at ${hex32(p.offset)} (${p.length} bytes) extends past the end of the file`,
+        )
+      }
+    }
+    for (const r of merged) {
+      this.b.addRegion({
+        nodeId,
+        kind: meta.region,
+        offset: r.offset,
+        length: r.length,
+      })
+    }
+    if (problems.length > 0) {
+      this.report(
+        nodeId,
+        'warning',
+        `${problems.length} ${unit.toLowerCase()} range(s) lie past the end of the file`,
+      )
+    }
+
+    if (head && cls !== 'raw') {
+      if (head[0] !== 0xff || head[1] !== 0xd8) {
+        this.report(nodeId, 'warning', 'JPEG data does not start with FFD8')
+      }
+      if (merged.length === 1) {
+        const [r] = merged
+        const preview = {
+          nodeId,
+          offset: r!.offset,
+          length: r!.length,
+          mime: 'image/jpeg' as const,
+          ...(width !== undefined && { width }),
+          ...(height !== undefined && { height }),
+        }
+        this.b.addPreview(preview)
+      }
+    }
   }
 }
