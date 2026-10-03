@@ -9,6 +9,33 @@ const ENTRY_SIZE = 12
 /** IFDs claiming more entries than this are treated as corrupt. */
 export const MAX_IFD_ENTRIES = 1000
 /** 42 = TIFF, 0x4F52/0x5352 = Olympus ORF, 0x55 = Panasonic RW2. */
+/** Safety net against pathological nesting of sub-IFDs. */
+export const MAX_IFD_DEPTH = 16
+/** Max pointers followed from a single entry (e.g. SubIFDs array). */
+const MAX_POINTERS_PER_ENTRY = 64
+const TAG_SUBIFDS = 330
+const TAG_EXIF_IFD = 34665
+const TAG_GPS_IFD = 34853
+const TAG_INTEROP_IFD = 40965
+const TAG_MAKERNOTE = 37500
+const MAKERNOTE_VENDORS: [string, string][] = [
+  ['Nikon\0', 'Nikon'],
+  ['OLYMPUS\0', 'Olympus'],
+  ['OLYMP\0', 'Olympus'],
+  ['Panasonic', 'Panasonic'],
+  ['SONY DSC', 'Sony'],
+  ['SONY CAM', 'Sony'],
+  ['LEICA', 'Leica'],
+  ['PENTAX \0', 'Pentax'],
+  ['AOC\0', 'Pentax'],
+  ['Canon', 'Canon'],
+]
+
+function guessVendor(bytes: Uint8Array): string | undefined {
+  const text = String.fromCharCode(...bytes)
+  return MAKERNOTE_VENDORS.find(([sig]) => text.startsWith(sig))?.[1]
+}
+
 const MAGICS = new Set([42, 0x4f52, 0x5352, 0x55])
 
 /**
@@ -51,12 +78,12 @@ export async function walkTiff(
     length: HEADER_SIZE,
   })
 
-  const w = new Walker(reader, builder, rootId, little)
+  const w = new Walker(reader, builder, little)
   if (firstIfd === 0) {
     w.report(headerId, 'warning', 'Header has no first IFD (offset 0)')
     return true
   }
-  await w.walkChain(firstIfd, 4)
+  await w.walkChain(firstIfd, 4, rootId, 0)
   return true
 }
 
@@ -65,20 +92,13 @@ class Walker {
   private ifdCount = 0
   private readonly reader: RandomAccessReader
   private readonly b: TreeBuilder
-  private readonly rootId: string
   private readonly little: boolean
   /** Live node table of the builder (build() returns it by reference). */
   private readonly nodes: Record<string, StructureNode>
 
-  constructor(
-    reader: RandomAccessReader,
-    b: TreeBuilder,
-    rootId: string,
-    little: boolean,
-  ) {
+  constructor(reader: RandomAccessReader, b: TreeBuilder, little: boolean) {
     this.reader = reader
     this.b = b
-    this.rootId = rootId
     this.little = little
     this.nodes = b.build().nodes
   }
@@ -92,6 +112,7 @@ class Walker {
   }
 
   private brokenIfd(
+    parentId: string,
     label: string,
     offset: number,
     length: number,
@@ -103,7 +124,7 @@ class Walker {
       label,
       offset,
       length,
-      parentId: this.rootId,
+      parentId,
       status: 'broken',
       messages: [message],
       details,
@@ -113,15 +134,41 @@ class Walker {
 
   /**
    * Walks an IFD chain starting at `start`. `pointerAt` is where the pointer
-   * to `start` lives (used to locate broken nodes).
+   * to `start` lives (used to locate broken nodes). IFD nodes become children
+   * of `parentId`; `name` labels sub-IFDs (top-level chains are IFD0, IFD1, …).
    */
-  async walkChain(start: number, pointerAt: number): Promise<void> {
+  async walkChain(
+    start: number,
+    pointerAt: number,
+    parentId: string,
+    depth: number,
+    name?: string,
+  ): Promise<void> {
     let offset = start
+    let k = 0
     while (offset !== 0) {
-      const label = `IFD${this.ifdCount++}`
+      const label =
+        name === undefined
+          ? `IFD${this.ifdCount++}`
+          : k === 0
+            ? name
+            : `${name} (next ${k})`
+      k++
       const size = this.reader.size
+      if (depth > MAX_IFD_DEPTH) {
+        this.brokenIfd(
+          parentId,
+          label,
+          pointerAt,
+          4,
+          `IFD nesting deeper than ${MAX_IFD_DEPTH} levels`,
+          { target: offset },
+        )
+        return
+      }
       if (this.visited.has(offset)) {
         this.brokenIfd(
+          parentId,
           label,
           pointerAt,
           4,
@@ -132,6 +179,7 @@ class Walker {
       }
       if (offset < HEADER_SIZE || offset + 2 > size) {
         this.brokenIfd(
+          parentId,
           label,
           pointerAt,
           4,
@@ -141,7 +189,7 @@ class Walker {
         return
       }
       this.visited.add(offset)
-      const next = await this.walkIfd(label, offset)
+      const next = await this.walkIfd(label, offset, parentId, depth)
       if (next === null) return
       pointerAt = next.pointerAt
       offset = next.offset
@@ -152,6 +200,8 @@ class Walker {
   private async walkIfd(
     label: string,
     offset: number,
+    parentId: string,
+    depth: number,
   ): Promise<{ offset: number; pointerAt: number } | null> {
     const size = this.reader.size
     const count = new ByteView(
@@ -164,7 +214,7 @@ class Walker {
         count > MAX_IFD_ENTRIES
           ? `IFD claims ${count} entries (limit ${MAX_IFD_ENTRIES})`
           : `IFD with ${count} entries extends past the end of the file`
-      this.brokenIfd(label, offset, Math.min(2, size - offset), why, {
+      this.brokenIfd(parentId, label, offset, Math.min(2, size - offset), why, {
         entryCount: count,
       })
       return null
@@ -179,13 +229,13 @@ class Walker {
       label,
       offset,
       length,
-      parentId: this.rootId,
+      parentId,
       details: { entryCount: count },
     })
     this.b.addRegion({ nodeId: ifdId, kind: 'ifd', offset, length })
 
     for (let i = 0; i < count; i++) {
-      await this.walkEntry(ifdId, table, offset, i)
+      await this.walkEntry(ifdId, table, offset, i, depth)
     }
     return { offset: table.u32(length - 4), pointerAt: offset + length - 4 }
   }
@@ -195,6 +245,7 @@ class Walker {
     table: ByteView,
     ifdOffset: number,
     index: number,
+    depth: number,
   ): Promise<void> {
     const at = 2 + index * ENTRY_SIZE
     const entryOffset = ifdOffset + at
@@ -229,12 +280,15 @@ class Walker {
 
     const byteLength = info.size * count
     const inline = byteLength <= 4
+    const isMakerNote = tag === TAG_MAKERNOTE
     let bytes: Uint8Array
+    let dataOffset = entryOffset + 8
     if (inline) {
       bytes = field
     } else {
       const valueOffset = table.u32(at + 8)
       stored.valueOffset = valueOffset
+      dataOffset = valueOffset
       if (valueOffset + byteLength > this.reader.size) {
         this.report(
           entryId,
@@ -243,20 +297,22 @@ class Walker {
         )
         return
       }
-      const valueId = this.b.addNode({
-        kind: 'value',
-        label: `${this.nodes[entryId]!.label} value`,
-        offset: valueOffset,
-        length: byteLength,
-        parentId: entryId,
-        details: { byteLength },
-      })
-      this.b.addRegion({
-        nodeId: valueId,
-        kind: 'value',
-        offset: valueOffset,
-        length: byteLength,
-      })
+      if (!isMakerNote) {
+        const valueId = this.b.addNode({
+          kind: 'value',
+          label: `${this.nodes[entryId]!.label} value`,
+          offset: valueOffset,
+          length: byteLength,
+          parentId: entryId,
+          details: { byteLength },
+        })
+        this.b.addRegion({
+          nodeId: valueId,
+          kind: 'value',
+          offset: valueOffset,
+          length: byteLength,
+        })
+      }
       bytes = await this.reader.read(
         valueOffset,
         summaryByteLength(info.name, info.size, count),
@@ -269,5 +325,84 @@ class Walker {
       bytes,
       this.little,
     )
+
+    if (isMakerNote) {
+      await this.addMakerNote(entryId, dataOffset, byteLength)
+      return
+    }
+    const subName = this.subIfdName(tag)
+    if (subName !== undefined || info.name === 'IFD') {
+      if (info.name !== 'LONG' && info.name !== 'IFD') return
+      await this.descend(entryId, tag, subName, dataOffset, count, depth)
+    }
+  }
+
+  private subIfdName(tag: number): string | undefined {
+    switch (tag) {
+      case TAG_SUBIFDS:
+        return 'SubIFD'
+      case TAG_EXIF_IFD:
+        return 'ExifIFD'
+      case TAG_GPS_IFD:
+        return 'GPSIFD'
+      case TAG_INTEROP_IFD:
+        return 'InteropIFD'
+    }
+    return undefined
+  }
+
+  /** Walks every IFD pointer of an entry as children of that entry. */
+  private async descend(
+    entryId: string,
+    tag: number,
+    subName: string | undefined,
+    dataOffset: number,
+    count: number,
+    depth: number,
+  ): Promise<void> {
+    const n = Math.min(count, MAX_POINTERS_PER_ENTRY)
+    const ptrs = new ByteView(
+      await this.reader.read(dataOffset, n * 4),
+      this.little,
+    )
+    for (let i = 0; i < n; i++) {
+      const target = ptrs.u32(i * 4)
+      if (target === 0) continue
+      const base = subName ?? `IFD ${hex16(tag)}`
+      const name = tag === TAG_SUBIFDS || count > 1 ? `${base}${i}` : base
+      await this.walkChain(target, dataOffset + i * 4, entryId, depth + 1, name)
+    }
+    if (count > n) {
+      this.report(
+        entryId,
+        'warning',
+        `Only the first ${n} of ${count} IFD pointers were followed`,
+      )
+    }
+  }
+
+  private async addMakerNote(
+    entryId: string,
+    offset: number,
+    length: number,
+  ): Promise<void> {
+    const head = await this.reader.read(offset, Math.min(16, length))
+    const details: NodeDetails = {
+      byteLength: length,
+      firstBytes: Array.from(head, (x) =>
+        x.toString(16).toUpperCase().padStart(2, '0'),
+      ).join(' '),
+    }
+    const vendor = guessVendor(head)
+    if (vendor) details.vendor = vendor
+    const id = this.b.addNode({
+      kind: 'makernote',
+      label: 'MakerNote',
+      offset,
+      length,
+      parentId: entryId,
+      details,
+    })
+    this.b.addRegion({ nodeId: id, kind: 'makernote', offset, length })
   }
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryReader } from '../../src/core/io'
 import type { ParseResult, StructureNode } from '../../src/core/model'
 import { parseFile } from '../../src/parsers'
-import { TiffBuilder, type TiffType } from '../helpers/tiffBuilder'
+import { ifdOffset, TiffBuilder, type TiffType } from '../helpers/tiffBuilder'
 
 const parse = (bytes: Uint8Array) => parseFile(createMemoryReader(bytes))
 const nodesOf = (r: ParseResult, kind: string): StructureNode[] =>
@@ -94,7 +94,9 @@ describe.each(['II', 'MM'] as const)('byte order %s', (byteOrder) => {
     t.ifd().entry(1, type, one).entry(2, type, many)
     const built = t.build()
     const r = await parse(built.bytes)
-    const entries = nodesOf(r, 'entry')
+    // Type-13 values are followed as IFD pointers; only look at IFD0's entries.
+    const ifd0 = nodesOf(r, 'ifd')[0]!
+    const entries = nodesOf(r, 'entry').filter((e) => e.parentId === ifd0.id)
     expect(entries[0]!.details).toMatchObject({ type, value: a })
     expect(entries[1]!.details).toMatchObject({ type, value: b })
     const il = built.layout.ifds[0]!
@@ -278,6 +280,116 @@ describe('broken input never throws', () => {
   })
 })
 
+describe('sub-directories', () => {
+  const byLabel = (r: ParseResult, label: string) =>
+    nodesOf(r, 'ifd').find((n) => n.label === label)!
+
+  it('descends SubIFDs, EXIF, Interop, GPS, type-13 and MakerNote', async () => {
+    const t = new TiffBuilder()
+    const ifd0 = t.ifd()
+    const sub0 = t.ifd().entry(1, 'SHORT', [1])
+    const sub1 = t.ifd().entry(2, 'SHORT', [2])
+    const exif = t.ifd()
+    const interop = t.ifd().entry(1, 'ASCII', 'R98')
+    const gps = t.ifd().entry(1, 'ASCII', 'N')
+    const typed = t.ifd().entry(5, 'SHORT', [5])
+    const mn = [...Buffer.from('Nikon\0'), ...Array(20).fill(1)]
+    exif.subIfd(40965, interop).entry(37500, 'UNDEFINED', mn)
+    ifd0
+      .entry(330, 'LONG', [ifdOffset(sub0), ifdOffset(sub1)])
+      .subIfd(34665, exif)
+      .subIfd(34853, gps)
+      .subIfd(0xc000, typed, 'IFD')
+    const built = t.build()
+    const r = await parse(built.bytes)
+
+    const parentLabel = (label: string) =>
+      r.nodes[r.nodes[byLabel(r, label).parentId!]!.parentId!]!.label
+    expect(
+      nodesOf(r, 'ifd')
+        .map((n) => n.label)
+        .sort(),
+    ).toEqual(
+      [
+        'IFD0',
+        'SubIFD0',
+        'SubIFD1',
+        'ExifIFD',
+        'InteropIFD',
+        'GPSIFD',
+        'IFD 0xC000',
+      ].sort(),
+    )
+    expect(r.nodes[byLabel(r, 'SubIFD1').parentId!]).toMatchObject({
+      kind: 'entry',
+      details: { tagId: 330 },
+    })
+    expect(parentLabel('SubIFD0')).toBe('IFD0')
+    expect(parentLabel('ExifIFD')).toBe('IFD0')
+    expect(parentLabel('InteropIFD')).toBe('ExifIFD')
+    expect(parentLabel('GPSIFD')).toBe('IFD0')
+    expect(parentLabel('IFD 0xC000')).toBe('IFD0')
+    expect(nodesOf(r, 'ifd').every((n) => n.status === 'ok')).toBe(true)
+
+    const [note] = nodesOf(r, 'makernote')
+    const ml = built.layout.ifds[3]!.entries[1]!
+    expect(note).toMatchObject({ offset: ml.valueOffset, length: mn.length })
+    expect(note!.details).toMatchObject({
+      vendor: 'Nikon',
+      firstBytes: '4E 69 6B 6F 6E 00 01 01 01 01 01 01 01 01 01 01',
+    })
+    expect(r.regions.filter((x) => x.kind === 'makernote')).toEqual([
+      {
+        nodeId: note!.id,
+        kind: 'makernote',
+        offset: ml.valueOffset,
+        length: mn.length,
+      },
+    ])
+    // MakerNote bytes are claimed once, by the makernote region only.
+    expect(nodesOf(r, 'value').some((v) => v.offset === ml.valueOffset)).toBe(
+      false,
+    )
+  })
+
+  it('detects a sub-IFD pointing back at IFD0', async () => {
+    const t = new TiffBuilder()
+    const ifd0 = t.ifd()
+    const exif = t.ifd().subIfd(330, ifd0)
+    ifd0.subIfd(34665, exif)
+    const built = t.build()
+    const r = await parse(built.bytes)
+    const broken = nodesOf(r, 'ifd').filter((n) => n.status === 'broken')
+    expect(broken).toHaveLength(1)
+    expect(broken[0]!.messages[0]).toMatch(/loop/i)
+    expect(r.nodes[broken[0]!.parentId!]!.details).toMatchObject({ tagId: 330 })
+    expect(broken[0]!.offset).toBe(
+      built.layout.ifds[1]!.entries[0]!.valueOffset,
+    )
+  })
+
+  it('limits nesting depth', async () => {
+    const t = new TiffBuilder()
+    const chain = Array.from({ length: 20 }, () => t.ifd())
+    chain.forEach((c, i) => {
+      if (i + 1 < chain.length) c.subIfd(34665, chain[i + 1]!)
+    })
+    const r = await parse(t.build().bytes)
+    const broken = nodesOf(r, 'ifd').filter((n) => n.status === 'broken')
+    expect(broken).toHaveLength(1)
+    expect(broken[0]!.messages[0]).toMatch(/nesting/i)
+    expect(nodesOf(r, 'ifd')).toHaveLength(18)
+  })
+
+  it('guesses no vendor for unknown MakerNotes', async () => {
+    const t = new TiffBuilder()
+    t.ifd().entry(37500, 'UNDEFINED', [1, 2, 3, 4, 5, 6])
+    const [note] = nodesOf(await parse(t.build().bytes), 'makernote')
+    expect(note!.details!.vendor).toBeUndefined()
+    expect(note!.details!.firstBytes).toBe('01 02 03 04 05 06')
+  })
+})
+
 describe('fixtures', () => {
   const dir = new URL('../../fixtures/', import.meta.url)
   const files = existsSync(dir)
@@ -290,6 +402,26 @@ describe('fixtures', () => {
       const bytes = readFileSync(new URL(file, dir))
       const r = await parse(new Uint8Array(bytes))
       expect(nodesOf(r, 'ifd').length, file).toBeGreaterThanOrEqual(1)
+    }
+  })
+  it.skipIf(files.length === 0)('every sample has an EXIF IFD', async () => {
+    for (const file of files) {
+      const bytes = readFileSync(new URL(file, dir))
+      const r = await parse(new Uint8Array(bytes))
+      expect(
+        nodesOf(r, 'ifd').some((n) => n.label === 'ExifIFD'),
+        file,
+      ).toBe(true)
+    }
+  })
+  it.skipIf(files.length === 0)('DNG/NEF/ARW have a sub-IFD', async () => {
+    for (const file of files.filter((f) => /\.(dng|nef|arw)$/i.test(f))) {
+      const bytes = readFileSync(new URL(file, dir))
+      const r = await parse(new Uint8Array(bytes))
+      expect(
+        nodesOf(r, 'ifd').some((n) => n.label.startsWith('SubIFD')),
+        file,
+      ).toBe(true)
     }
   })
 })
