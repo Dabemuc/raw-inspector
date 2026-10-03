@@ -1,0 +1,5 @@
+export { OutOfBoundsError } from './types'
+export type { RandomAccessReader, ReaderOptions } from './types'
+export { createMemoryReader } from './memoryReader'
+export { createFileReader } from './fileReader'
+export type { FileReaderOptions } from './fileReader'
