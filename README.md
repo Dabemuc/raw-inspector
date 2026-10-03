@@ -13,6 +13,16 @@ npm install
 npm run dev
 ```
 
+| Script                 | Purpose                                      |
+| ---------------------- | -------------------------------------------- |
+| `npm run typecheck`    | Type-check app, test and node code (vue-tsc) |
+| `npm run test`         | Run the Vitest suite once                    |
+| `npm run test:watch`   | Run Vitest in watch mode                     |
+| `npm run lint`         | Lint with ESLint                             |
+| `npm run lint:fix`     | Lint and auto-fix                            |
+| `npm run format`       | Format with Prettier                         |
+| `npm run format:check` | Check formatting                             |
+
 ## Build
 
 ```bash
