@@ -228,7 +228,7 @@ describe('broken input never throws', () => {
     const r = await parse(built.bytes)
     const [e] = nodesOf(r, 'entry')
     expect(e).toMatchObject({ status: 'warning' })
-    expect(e!.details!.rawValue).toBe('0x01 0x02 0x03 0x04')
+    expect(e!.details!.raw).toBe('0x01 0x02 0x03 0x04')
   })
 
   it('rejects IFDs with too many entries', async () => {
