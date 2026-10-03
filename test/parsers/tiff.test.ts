@@ -18,17 +18,19 @@ const nodesOf = (r: ParseResult, kind: string): StructureNode[] =>
 describe('parseFile non-TIFF', () => {
   it('returns root + unknown region', async () => {
     const r = await parse(new Uint8Array(32).fill(7))
-    expect(Object.keys(r.nodes)).toHaveLength(1)
+    expect(Object.keys(r.nodes)).toHaveLength(2)
     expect(r.nodes[r.rootId]!.kind).toBe('file')
+    const unknown = nodesOf(r, 'unknown')[0]!
+    expect(unknown.parentId).toBe(r.rootId)
     expect(r.regions).toEqual([
-      { nodeId: r.rootId, kind: 'unknown', offset: 0, length: 32 },
+      { nodeId: unknown.id, kind: 'unknown', offset: 0, length: 32 },
     ])
   })
 
   it('handles empty and tiny files', async () => {
     expect((await parse(new Uint8Array(0))).regions).toEqual([])
     expect(Object.keys((await parse(Uint8Array.of(0x49))).nodes)).toHaveLength(
-      1,
+      2,
     )
   })
 

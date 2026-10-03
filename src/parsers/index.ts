@@ -1,5 +1,6 @@
 import type { RandomAccessReader } from '../core/io'
 import { TreeBuilder, type ParseResult } from '../core/model'
+import { applyCoverage } from './coverage'
 import { walkTiff } from './tiff'
 
 /** Single entry point for structure parsing; later parsers extend this. */
@@ -14,24 +15,14 @@ export async function parseFile(
     length: reader.size,
   })
 
-  let recognised
   try {
-    recognised = await walkTiff(reader, builder, rootId)
+    await walkTiff(reader, builder, rootId)
   } catch (error) {
     builder.addWarning(
       rootId,
       `Parser stopped unexpectedly: ${error instanceof Error ? error.message : String(error)}`,
     )
-    recognised = true
   }
 
-  if (!recognised && reader.size > 0) {
-    builder.addRegion({
-      nodeId: rootId,
-      kind: 'unknown',
-      offset: 0,
-      length: reader.size,
-    })
-  }
-  return builder.build()
+  return applyCoverage(reader, builder.build())
 }
