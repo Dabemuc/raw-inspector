@@ -1,6 +1,7 @@
 import type { RandomAccessReader } from '../core/io'
 import { TreeBuilder, type ParseResult } from '../core/model'
 import { applyCoverage } from './coverage'
+import { dropUnknownGaps, scanJpegs } from './scan/jpeg'
 import { walkTiff } from './tiff'
 
 /** Single entry point for structure parsing; later parsers extend this. */
@@ -24,5 +25,17 @@ export async function parseFile(
     )
   }
 
-  return applyCoverage(reader, builder.build())
+  const result = await applyCoverage(reader, builder.build())
+  try {
+    if (await scanJpegs(reader, result)) {
+      dropUnknownGaps(result)
+      return await applyCoverage(reader, result)
+    }
+  } catch (error) {
+    result.warnings.push({
+      nodeId: null,
+      message: `JPEG scan failed: ${error instanceof Error ? error.message : String(error)}`,
+    })
+  }
+  return result
 }

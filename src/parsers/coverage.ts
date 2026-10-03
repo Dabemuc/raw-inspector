@@ -45,7 +45,7 @@ function sortedRegions(result: ParseResult): Region[] {
 
 function flagNode(result: ParseResult, nodeId: string, message: string): void {
   const node = result.nodes[nodeId]
-  if (!node) return
+  if (!node || node.messages.includes(message)) return
   if (node.status === 'ok') node.status = 'warning'
   node.messages.push(message)
   result.warnings.push({ nodeId, message })
