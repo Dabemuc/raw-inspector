@@ -1,0 +1,1991 @@
+[
+  {
+    "lib": "yb",
+    "file": "5d3.DNG",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 305,
+    "t": {
+      "fetch": 27.958941,
+      "open": 82.228813,
+      "metadata": 6.104656999999975,
+      "decode": 440.70630900000003,
+      "thumb": 3.968770999999947
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS 5D Mark III",
+      "width": 5796,
+      "height": 3870,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 15000,
+      "cam_mul": [
+        1.649413824081421,
+        1,
+        2.165040969848633,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        5760,
+        3840,
+        0
+      ],
+      "rawLen": 23384000,
+      "thumbData": [
+        "jpeg",
+        5760,
+        3840,
+        1236788
+      ]
+    },
+    "wallMs": 603,
+    "sizeMb": 23.2
+  },
+  {
+    "lib": "yb",
+    "file": "5d3.DNG",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 602,
+    "t": {
+      "fetch": 19.473645,
+      "open": 74.758941,
+      "metadata": 5.089276999999996,
+      "decode": 1740.88987,
+      "thumb": 2.9498490000000857
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS 5D Mark III",
+      "width": 5796,
+      "height": 3870,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 15000,
+      "cam_mul": [
+        1.649413824081421,
+        1,
+        2.165040969848633,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        5760,
+        3840,
+        0
+      ],
+      "out": [
+        5796,
+        3870,
+        3,
+        8,
+        67291560
+      ],
+      "thumbData": [
+        "jpeg",
+        5760,
+        3840,
+        1236788
+      ]
+    },
+    "wallMs": 1888,
+    "sizeMb": 23.2
+  },
+  {
+    "lib": "yb",
+    "file": "5d3.DNG",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 367,
+    "t": {
+      "fetch": 19.591729,
+      "open": 72.055343,
+      "metadata": 4.91352599999999,
+      "decode": 623.317949,
+      "thumb": 1.6435510000000022
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS 5D Mark III",
+      "width": 5796,
+      "height": 3870,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 15000,
+      "cam_mul": [
+        1.649413824081421,
+        1,
+        2.165040969848633,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        5760,
+        3840,
+        0
+      ],
+      "out": [
+        2898,
+        1935,
+        3,
+        8,
+        16822890
+      ],
+      "thumbData": [
+        "jpeg",
+        5760,
+        3840,
+        1236788
+      ]
+    },
+    "wallMs": 786,
+    "sizeMb": 23.2
+  },
+  {
+    "lib": "yb",
+    "file": "5d4.CR2",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 448,
+    "t": {
+      "fetch": 48.815344,
+      "open": 65.802893,
+      "metadata": 4.924902000000003,
+      "decode": 538.298997,
+      "thumb": 3.0257239999999683
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS 5D Mark IV",
+      "width": 6744,
+      "height": 4502,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        2013,
+        1024,
+        1524,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        6720,
+        4480,
+        0
+      ],
+      "rawLen": 31262720,
+      "thumbData": [
+        "jpeg",
+        6720,
+        4480,
+        2097670
+      ]
+    },
+    "wallMs": 702,
+    "sizeMb": 61.9
+  },
+  {
+    "lib": "yb",
+    "file": "5d4.CR2",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 850,
+    "t": {
+      "fetch": 51.696318000000005,
+      "open": 69.887539,
+      "metadata": 4.817275999999993,
+      "decode": 2294.2659869999998,
+      "thumb": 7.200705999999627
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS 5D Mark IV",
+      "width": 6744,
+      "height": 4502,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        2013,
+        1024,
+        1524,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        6720,
+        4480,
+        0
+      ],
+      "out": [
+        6744,
+        4502,
+        3,
+        8,
+        91084464
+      ],
+      "thumbData": [
+        "jpeg",
+        6720,
+        4480,
+        2097670
+      ]
+    },
+    "wallMs": 2478,
+    "sizeMb": 61.9
+  },
+  {
+    "lib": "yb",
+    "file": "5d4.CR2",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 546,
+    "t": {
+      "fetch": 48.443258,
+      "open": 67.77298700000001,
+      "metadata": 5.0093180000000075,
+      "decode": 797.8027559999999,
+      "thumb": 2.038720000000012
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS 5D Mark IV",
+      "width": 6744,
+      "height": 4502,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        2013,
+        1024,
+        1524,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        6720,
+        4480,
+        0
+      ],
+      "out": [
+        3372,
+        2251,
+        3,
+        8,
+        22771116
+      ],
+      "thumbData": [
+        "jpeg",
+        6720,
+        4480,
+        2097670
+      ]
+    },
+    "wallMs": 965,
+    "sizeMb": 61.9
+  },
+  {
+    "lib": "yb",
+    "file": "a7iii.ARW",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 289,
+    "t": {
+      "fetch": 21.8002,
+      "open": 70.854544,
+      "metadata": 5.040402,
+      "decode": 133.80546399999997,
+      "thumb": 2.2282619999999724
+    },
+    "info": {
+      "make": "Sony",
+      "model": "ILCE-7M3",
+      "width": 6024,
+      "height": 4024,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 512,
+      "maximum": 16383,
+      "cam_mul": [
+        2272,
+        1024,
+        1800,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1616,
+        1080,
+        0
+      ],
+      "rawLen": 24337152,
+      "thumbData": [
+        "jpeg",
+        1616,
+        1080,
+        1151491
+      ]
+    },
+    "wallMs": 270,
+    "sizeMb": 25.6
+  },
+  {
+    "lib": "yb",
+    "file": "a7iii.ARW",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 634,
+    "t": {
+      "fetch": 26.497933000000003,
+      "open": 69.55903699999999,
+      "metadata": 5.020901999999992,
+      "decode": 1526.512184,
+      "thumb": 3.6070609999999306
+    },
+    "info": {
+      "make": "Sony",
+      "model": "ILCE-7M3",
+      "width": 6024,
+      "height": 4024,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 512,
+      "maximum": 16383,
+      "cam_mul": [
+        2272,
+        1024,
+        1800,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1616,
+        1080,
+        0
+      ],
+      "out": [
+        6024,
+        4024,
+        3,
+        8,
+        72721728
+      ],
+      "thumbData": [
+        "jpeg",
+        1616,
+        1080,
+        1151491
+      ]
+    },
+    "wallMs": 1676,
+    "sizeMb": 25.6
+  },
+  {
+    "lib": "yb",
+    "file": "a7iii.ARW",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 378,
+    "t": {
+      "fetch": 23.671085,
+      "open": 69.38045299999999,
+      "metadata": 5.090485000000001,
+      "decode": 346.87347500000004,
+      "thumb": 1.7374260000000277
+    },
+    "info": {
+      "make": "Sony",
+      "model": "ILCE-7M3",
+      "width": 6024,
+      "height": 4024,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 512,
+      "maximum": 16383,
+      "cam_mul": [
+        2272,
+        1024,
+        1800,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1616,
+        1080,
+        0
+      ],
+      "out": [
+        3012,
+        2012,
+        3,
+        8,
+        18180432
+      ],
+      "thumbData": [
+        "jpeg",
+        1616,
+        1080,
+        1151491
+      ]
+    },
+    "wallMs": 507,
+    "sizeMb": 25.6
+  },
+  {
+    "lib": "yb",
+    "file": "a7rIV.ARW",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 796,
+    "t": {
+      "fetch": 95.481801,
+      "open": 85.909458,
+      "metadata": 6.74132800000001,
+      "decode": 174.07417900000002,
+      "thumb": 10.126469999999983
+    },
+    "info": {
+      "make": "Sony",
+      "model": "ILCE-7RM4",
+      "width": 9568,
+      "height": 6376,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 512,
+      "maximum": 16380,
+      "cam_mul": [
+        3076,
+        1024,
+        1572,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1616,
+        1080,
+        0
+      ],
+      "rawLen": 61209600,
+      "thumbData": [
+        "jpeg",
+        1616,
+        1080,
+        554730
+      ]
+    },
+    "wallMs": 416,
+    "sizeMb": 123.1
+  },
+  {
+    "lib": "yb",
+    "file": "a7rIV.ARW",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 1505,
+    "t": {
+      "fetch": 95.916095,
+      "open": 86.051584,
+      "metadata": 5.211320000000001,
+      "decode": 3861.39318,
+      "thumb": 11.296143999999913
+    },
+    "info": {
+      "make": "Sony",
+      "model": "ILCE-7RM4",
+      "width": 9568,
+      "height": 6376,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 512,
+      "maximum": 16380,
+      "cam_mul": [
+        3076,
+        1024,
+        1572,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1616,
+        1080,
+        0
+      ],
+      "out": [
+        9568,
+        6376,
+        3,
+        8,
+        183016704
+      ],
+      "thumbData": [
+        "jpeg",
+        1616,
+        1080,
+        554730
+      ]
+    },
+    "wallMs": 4123,
+    "sizeMb": 123.1
+  },
+  {
+    "lib": "yb",
+    "file": "a7rIV.ARW",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 948,
+    "t": {
+      "fetch": 116.30561999999999,
+      "open": 96.33588900000001,
+      "metadata": 6.0188240000000235,
+      "decode": 721.125221,
+      "thumb": 1.6425090000000182
+    },
+    "info": {
+      "make": "Sony",
+      "model": "ILCE-7RM4",
+      "width": 9568,
+      "height": 6376,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 512,
+      "maximum": 16380,
+      "cam_mul": [
+        3076,
+        1024,
+        1572,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1616,
+        1080,
+        0
+      ],
+      "out": [
+        4784,
+        3188,
+        3,
+        8,
+        45754176
+      ],
+      "thumbData": [
+        "jpeg",
+        1616,
+        1080,
+        554730
+      ]
+    },
+    "wallMs": 997,
+    "sizeMb": 123.1
+  },
+  {
+    "lib": "yb",
+    "file": "d850.NEF",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 470,
+    "t": {
+      "fetch": 52.347279,
+      "open": 66.33631199999999,
+      "metadata": 5.337527999999992,
+      "decode": 911.65803,
+      "thumb": 9.11534000000006
+    },
+    "info": {
+      "make": "Nikon",
+      "model": "D850",
+      "width": 8288,
+      "height": 5520,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 400,
+      "maximum": 16383,
+      "cam_mul": [
+        1.900390625,
+        1,
+        1.37548828125,
+        1
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8256,
+        5504,
+        0
+      ],
+      "rawLen": 45749760,
+      "thumbData": [
+        "jpeg",
+        8256,
+        5504,
+        5316945
+      ]
+    },
+    "wallMs": 1084,
+    "sizeMb": 55.2
+  },
+  {
+    "lib": "yb",
+    "file": "d850.NEF",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 1035,
+    "t": {
+      "fetch": 43.850026,
+      "open": 69.779122,
+      "metadata": 5.162026999999995,
+      "decode": 3555.763675,
+      "thumb": 7.4868320000000494
+    },
+    "info": {
+      "make": "Nikon",
+      "model": "D850",
+      "width": 8288,
+      "height": 5520,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 400,
+      "maximum": 16383,
+      "cam_mul": [
+        1.900390625,
+        1,
+        1.37548828125,
+        1
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8256,
+        5504,
+        0
+      ],
+      "out": [
+        8288,
+        5520,
+        3,
+        8,
+        137249280
+      ],
+      "thumbData": [
+        "jpeg",
+        8256,
+        5504,
+        5316945
+      ]
+    },
+    "wallMs": 3737,
+    "sizeMb": 55.2
+  },
+  {
+    "lib": "yb",
+    "file": "d850.NEF",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 603,
+    "t": {
+      "fetch": 42.985646,
+      "open": 75.41294400000001,
+      "metadata": 6.031449000000009,
+      "decode": 1312.008832,
+      "thumb": 2.8964320000000043
+    },
+    "info": {
+      "make": "Nikon",
+      "model": "D850",
+      "width": 8288,
+      "height": 5520,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 400,
+      "maximum": 16383,
+      "cam_mul": [
+        1.900390625,
+        1,
+        1.37548828125,
+        1
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8256,
+        5504,
+        0
+      ],
+      "out": [
+        4144,
+        2760,
+        3,
+        8,
+        34312320
+      ],
+      "thumbData": [
+        "jpeg",
+        8256,
+        5504,
+        5316945
+      ]
+    },
+    "wallMs": 1486,
+    "sizeMb": 55.2
+  },
+  {
+    "lib": "yb",
+    "file": "em1.ORF",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 236,
+    "t": {
+      "fetch": 16.826757,
+      "open": 72.20201,
+      "metadata": 4.609941000000006,
+      "decode": 522.694122,
+      "thumb": 2.9639740000000074
+    },
+    "info": {
+      "make": "Olympus",
+      "model": "E-M1MarkII",
+      "width": 5240,
+      "height": 3912,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 4095,
+      "cam_mul": [
+        1.234375,
+        1,
+        3.8203125,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        3200,
+        2400,
+        0
+      ],
+      "rawLen": 20498880,
+      "thumbData": [
+        "jpeg",
+        3200,
+        2400,
+        1063312
+      ]
+    },
+    "wallMs": 656,
+    "sizeMb": 17.3
+  },
+  {
+    "lib": "yb",
+    "file": "em1.ORF",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 529,
+    "t": {
+      "fetch": 14.813954000000003,
+      "open": 72.217802,
+      "metadata": 5.201153000000005,
+      "decode": 1728.773305,
+      "thumb": 4.887235000000146
+    },
+    "info": {
+      "make": "Olympus",
+      "model": "E-M1MarkII",
+      "width": 5240,
+      "height": 3912,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 4095,
+      "cam_mul": [
+        1.234375,
+        1,
+        3.8203125,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        3200,
+        2400,
+        0
+      ],
+      "out": [
+        5240,
+        3912,
+        3,
+        8,
+        61496640
+      ],
+      "thumbData": [
+        "jpeg",
+        3200,
+        2400,
+        1063312
+      ]
+    },
+    "wallMs": 1871,
+    "sizeMb": 17.3
+  },
+  {
+    "lib": "yb",
+    "file": "em1.ORF",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 311,
+    "t": {
+      "fetch": 17.440135,
+      "open": 79.791592,
+      "metadata": 5.515695999999991,
+      "decode": 705.349054,
+      "thumb": 1.670217999999977
+    },
+    "info": {
+      "make": "Olympus",
+      "model": "E-M1MarkII",
+      "width": 5240,
+      "height": 3912,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 4095,
+      "cam_mul": [
+        1.234375,
+        1,
+        3.8203125,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        3200,
+        2400,
+        0
+      ],
+      "out": [
+        2620,
+        1956,
+        3,
+        8,
+        15374160
+      ],
+      "thumbData": [
+        "jpeg",
+        3200,
+        2400,
+        1063312
+      ]
+    },
+    "wallMs": 890,
+    "sizeMb": 17.3
+  },
+  {
+    "lib": "yb",
+    "file": "gh5.RW2",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 291,
+    "t": {
+      "fetch": 23.293290999999996,
+      "open": 71.18187999999999,
+      "metadata": 4.528690999999995,
+      "decode": 225.03365900000003,
+      "thumb": 3.440101000000027
+    },
+    "info": {
+      "make": "Panasonic",
+      "model": "DC-GH5",
+      "width": 5208,
+      "height": 3904,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 143,
+      "maximum": 4095,
+      "cam_mul": [
+        606,
+        256,
+        456,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1920,
+        1440,
+        0
+      ],
+      "rawLen": 20550656,
+      "thumbData": [
+        "jpeg",
+        1920,
+        1440,
+        713278
+      ]
+    },
+    "wallMs": 366,
+    "sizeMb": 24.2
+  },
+  {
+    "lib": "yb",
+    "file": "gh5.RW2",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 566,
+    "t": {
+      "fetch": 20.821694000000004,
+      "open": 70.681543,
+      "metadata": 4.8156919999999985,
+      "decode": 1473.156316,
+      "thumb": 1.6772590000000491
+    },
+    "info": {
+      "make": "Panasonic",
+      "model": "DC-GH5",
+      "width": 5208,
+      "height": 3904,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 143,
+      "maximum": 4095,
+      "cam_mul": [
+        606,
+        256,
+        456,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1920,
+        1440,
+        0
+      ],
+      "out": [
+        5208,
+        3904,
+        3,
+        8,
+        60996096
+      ],
+      "thumbData": [
+        "jpeg",
+        1920,
+        1440,
+        713278
+      ]
+    },
+    "wallMs": 1615,
+    "sizeMb": 24.2
+  },
+  {
+    "lib": "yb",
+    "file": "gh5.RW2",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 359,
+    "t": {
+      "fetch": 23.831002000000005,
+      "open": 71.571215,
+      "metadata": 4.930567999999994,
+      "decode": 455.778764,
+      "thumb": 1.5065490000000636
+    },
+    "info": {
+      "make": "Panasonic",
+      "model": "DC-GH5",
+      "width": 5208,
+      "height": 3904,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 143,
+      "maximum": 4095,
+      "cam_mul": [
+        606,
+        256,
+        456,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1920,
+        1440,
+        0
+      ],
+      "out": [
+        2604,
+        1952,
+        3,
+        8,
+        15249024
+      ],
+      "thumbData": [
+        "jpeg",
+        1920,
+        1440,
+        713278
+      ]
+    },
+    "wallMs": 597,
+    "sizeMb": 24.2
+  },
+  {
+    "lib": "yb",
+    "file": "q2.DNG",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 608,
+    "t": {
+      "fetch": 81.03680800000001,
+      "open": 67.015316,
+      "metadata": 6.310075000000012,
+      "decode": 741.3851629999999,
+      "thumb": 11.115933999999925
+    },
+    "info": {
+      "make": "Leica",
+      "model": "Q2",
+      "width": 8392,
+      "height": 5632,
+      "colors": 3,
+      "filters": 1263225675,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        2.041015625,
+        1,
+        1.48828125,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8368,
+        5584,
+        0
+      ],
+      "rawLen": 47443968,
+      "thumbData": [
+        "jpeg",
+        8368,
+        5584,
+        3907946
+      ]
+    },
+    "wallMs": 949,
+    "sizeMb": 87.2
+  },
+  {
+    "lib": "yb",
+    "file": "q2.DNG",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 1175,
+    "t": {
+      "fetch": 118.09467199999999,
+      "open": 79.85263500000002,
+      "metadata": 5.376570999999984,
+      "decode": 3706.801731,
+      "thumb": 10.704181999999946
+    },
+    "info": {
+      "make": "Leica",
+      "model": "Q2",
+      "width": 8392,
+      "height": 5632,
+      "colors": 3,
+      "filters": 1263225675,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        2.041015625,
+        1,
+        1.48828125,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8368,
+        5584,
+        0
+      ],
+      "out": [
+        8392,
+        5632,
+        3,
+        8,
+        141791232
+      ],
+      "thumbData": [
+        "jpeg",
+        8368,
+        5584,
+        3907946
+      ]
+    },
+    "wallMs": 3985,
+    "sizeMb": 87.2
+  },
+  {
+    "lib": "yb",
+    "file": "q2.DNG",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 717,
+    "t": {
+      "fetch": 84.855369,
+      "open": 76.611992,
+      "metadata": 6.050823999999977,
+      "decode": 1220.423927,
+      "thumb": 2.812056999999868
+    },
+    "info": {
+      "make": "Leica",
+      "model": "Q2",
+      "width": 8392,
+      "height": 5632,
+      "colors": 3,
+      "filters": 1263225675,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        2.041015625,
+        1,
+        1.48828125,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8368,
+        5584,
+        0
+      ],
+      "out": [
+        4196,
+        2816,
+        3,
+        8,
+        35447808
+      ],
+      "thumbData": [
+        "jpeg",
+        8368,
+        5584,
+        3907946
+      ]
+    },
+    "wallMs": 1445,
+    "sizeMb": 87.2
+  },
+  {
+    "lib": "yb",
+    "file": "r5.CR3",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 453,
+    "t": {
+      "fetch": 33.830348,
+      "open": 73.650476,
+      "metadata": 5.0614439999999945,
+      "decode": 652.411105,
+      "thumb": 8.262459999999919
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS R5",
+      "width": 8191,
+      "height": 5463,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        1659,
+        1024,
+        2315,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8192,
+        5464,
+        0
+      ],
+      "rawLen": 46654272,
+      "thumbData": [
+        "jpeg",
+        8192,
+        5464,
+        3110222
+      ]
+    },
+    "wallMs": 815,
+    "sizeMb": 40.6
+  },
+  {
+    "lib": "yb",
+    "file": "r5.CR3",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 995,
+    "t": {
+      "fetch": 37.730326,
+      "open": 73.59385,
+      "metadata": 5.388821000000007,
+      "decode": 3255.035321,
+      "thumb": 7.002162999999655
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS R5",
+      "width": 8191,
+      "height": 5463,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        1659,
+        1024,
+        2315,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8192,
+        5464,
+        0
+      ],
+      "out": [
+        8191,
+        5463,
+        3,
+        8,
+        134242299
+      ],
+      "thumbData": [
+        "jpeg",
+        8192,
+        5464,
+        3110222
+      ]
+    },
+    "wallMs": 3436,
+    "sizeMb": 40.6
+  },
+  {
+    "lib": "yb",
+    "file": "r5.CR3",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 556,
+    "t": {
+      "fetch": 39.25116800000001,
+      "open": 81.05964100000001,
+      "metadata": 5.2626949999999795,
+      "decode": 992.1410420000001,
+      "thumb": 2.694972999999891
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS R5",
+      "width": 8190,
+      "height": 5462,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        1659,
+        1024,
+        2315,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        8192,
+        5464,
+        0
+      ],
+      "out": [
+        4095,
+        2731,
+        3,
+        8,
+        33550335
+      ],
+      "thumbData": [
+        "jpeg",
+        8192,
+        5464,
+        3110222
+      ]
+    },
+    "wallMs": 1168,
+    "sizeMb": 40.6
+  },
+  {
+    "lib": "yb",
+    "file": "r6.CR3",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 286,
+    "t": {
+      "fetch": 23.927128000000003,
+      "open": 77.085702,
+      "metadata": 4.590398999999991,
+      "decode": 264.287744,
+      "thumb": 3.780729000000008
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS R6",
+      "width": 5496,
+      "height": 3670,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        1849,
+        1024,
+        1678,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        5472,
+        3648,
+        0
+      ],
+      "rawLen": 20646144,
+      "thumbData": [
+        "jpeg",
+        5472,
+        3648,
+        2380455
+      ]
+    },
+    "wallMs": 415,
+    "sizeMb": 22.9
+  },
+  {
+    "lib": "yb",
+    "file": "r6.CR3",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 521,
+    "t": {
+      "fetch": 21.436114000000003,
+      "open": 75.07548399999999,
+      "metadata": 5.829280999999995,
+      "decode": 1494.258679,
+      "thumb": 3.4588099999998576
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS R6",
+      "width": 5496,
+      "height": 3670,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        1849,
+        1024,
+        1678,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        5472,
+        3648,
+        0
+      ],
+      "out": [
+        5496,
+        3670,
+        3,
+        8,
+        60510960
+      ],
+      "thumbData": [
+        "jpeg",
+        5472,
+        3648,
+        2380455
+      ]
+    },
+    "wallMs": 1643,
+    "sizeMb": 22.9
+  },
+  {
+    "lib": "yb",
+    "file": "r6.CR3",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 361,
+    "t": {
+      "fetch": 19.196477,
+      "open": 103.96255399999998,
+      "metadata": 6.171032999999994,
+      "decode": 462.230091,
+      "thumb": 2.9061819999999443
+    },
+    "info": {
+      "make": "Canon",
+      "model": "EOS R6",
+      "width": 5496,
+      "height": 3670,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        1849,
+        1024,
+        1678,
+        1024
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        5472,
+        3648,
+        0
+      ],
+      "out": [
+        2748,
+        1835,
+        3,
+        8,
+        15127740
+      ],
+      "thumbData": [
+        "jpeg",
+        5472,
+        3648,
+        2380455
+      ]
+    },
+    "wallMs": 676,
+    "sizeMb": 22.9
+  },
+  {
+    "lib": "yb",
+    "file": "s1.RW2",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 331,
+    "t": {
+      "fetch": 33.845264,
+      "open": 70.829669,
+      "metadata": 5.630738000000008,
+      "decode": 158.80080500000003,
+      "thumb": 2.0500110000000404
+    },
+    "info": {
+      "make": "Panasonic",
+      "model": "DC-S1",
+      "width": 6024,
+      "height": 4016,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16319,
+      "cam_mul": [
+        538,
+        256,
+        476,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1920,
+        1280,
+        0
+      ],
+      "rawLen": 24385152,
+      "thumbData": [
+        "jpeg",
+        1920,
+        1280,
+        513704
+      ]
+    },
+    "wallMs": 312,
+    "sizeMb": 36
+  },
+  {
+    "lib": "yb",
+    "file": "s1.RW2",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 648,
+    "t": {
+      "fetch": 31.978545000000004,
+      "open": 76.58265800000001,
+      "metadata": 6.09519899999998,
+      "decode": 1696.596341,
+      "thumb": 5.699072000000115
+    },
+    "info": {
+      "make": "Panasonic",
+      "model": "DC-S1",
+      "width": 6024,
+      "height": 4016,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16319,
+      "cam_mul": [
+        538,
+        256,
+        476,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1920,
+        1280,
+        0
+      ],
+      "out": [
+        6024,
+        4016,
+        3,
+        8,
+        72577152
+      ],
+      "thumbData": [
+        "jpeg",
+        1920,
+        1280,
+        513704
+      ]
+    },
+    "wallMs": 1867,
+    "sizeMb": 36
+  },
+  {
+    "lib": "yb",
+    "file": "s1.RW2",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 410,
+    "t": {
+      "fetch": 30.824539,
+      "open": 77.353621,
+      "metadata": 5.951949000000013,
+      "decode": 440.943352,
+      "thumb": 1.4835079999999152
+    },
+    "info": {
+      "make": "Panasonic",
+      "model": "DC-S1",
+      "width": 6024,
+      "height": 4016,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16319,
+      "cam_mul": [
+        538,
+        256,
+        476,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        1920,
+        1280,
+        0
+      ],
+      "out": [
+        3012,
+        2008,
+        3,
+        8,
+        18144288
+      ],
+      "thumbData": [
+        "jpeg",
+        1920,
+        1280,
+        513704
+      ]
+    },
+    "wallMs": 601,
+    "sizeMb": 36
+  },
+  {
+    "lib": "yb",
+    "file": "xt3.RAF",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 368,
+    "t": {
+      "fetch": 57.16568,
+      "open": 62.31145699999999,
+      "metadata": 5.78994800000001,
+      "decode": 78.32458399999999,
+      "thumb": 3.896938000000006
+    },
+    "info": {
+      "make": "Fujifilm",
+      "model": "X-T3",
+      "width": 6246,
+      "height": 4170,
+      "colors": 3,
+      "filters": 9,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        583,
+        302,
+        584,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        4416,
+        2944,
+        0
+      ],
+      "rawLen": 26697888,
+      "thumbData": [
+        "jpeg",
+        4416,
+        2944,
+        2667229
+      ]
+    },
+    "wallMs": 247,
+    "sizeMb": 56.1
+  },
+  {
+    "lib": "yb",
+    "file": "xt3.RAF",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 682,
+    "t": {
+      "fetch": 43.996401999999996,
+      "open": 67.949488,
+      "metadata": 5.139319,
+      "decode": 14191.801325,
+      "thumb": 4.276898000000074
+    },
+    "info": {
+      "make": "Fujifilm",
+      "model": "X-T3",
+      "width": 6246,
+      "height": 4170,
+      "colors": 3,
+      "filters": 9,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        583,
+        302,
+        584,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        4416,
+        2944,
+        0
+      ],
+      "out": [
+        6246,
+        4170,
+        3,
+        8,
+        78137460
+      ],
+      "thumbData": [
+        "jpeg",
+        4416,
+        2944,
+        2667229
+      ]
+    },
+    "wallMs": 14363,
+    "sizeMb": 56.1
+  },
+  {
+    "lib": "yb",
+    "file": "xt3.RAF",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 513,
+    "t": {
+      "fetch": 46.769375,
+      "open": 67.74398700000002,
+      "metadata": 5.228985999999992,
+      "decode": 301.74548500000003,
+      "thumb": 1.9959269999999947
+    },
+    "info": {
+      "make": "Fujifilm",
+      "model": "X-T3",
+      "width": 6246,
+      "height": 4170,
+      "colors": 3,
+      "filters": 9,
+      "cdesc": "RGBG",
+      "black": 0,
+      "maximum": 16383,
+      "cam_mul": [
+        583,
+        302,
+        584,
+        0
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        4416,
+        2944,
+        0
+      ],
+      "out": [
+        3123,
+        2085,
+        3,
+        8,
+        19534365
+      ],
+      "thumbData": [
+        "jpeg",
+        4416,
+        2944,
+        2667229
+      ]
+    },
+    "wallMs": 495,
+    "sizeMb": 56.1
+  },
+  {
+    "lib": "yb",
+    "file": "z6.NEF",
+    "mode": "raw",
+    "ok": true,
+    "maxRssMb": 398,
+    "t": {
+      "fetch": 41.833556,
+      "open": 82.00293699999999,
+      "metadata": 5.4759870000000035,
+      "decode": 40.74196699999999,
+      "thumb": 2.1114279999999894
+    },
+    "info": {
+      "make": "Nikon",
+      "model": "Z 6",
+      "width": 6064,
+      "height": 4040,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 1008,
+      "maximum": 16383,
+      "cam_mul": [
+        1.189453125,
+        1,
+        2.12109375,
+        1
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        6048,
+        4024,
+        0
+      ],
+      "rawLen": 24498560,
+      "thumbData": [
+        "jpeg",
+        6048,
+        4024,
+        1293562
+      ]
+    },
+    "wallMs": 213,
+    "sizeMb": 47.5
+  },
+  {
+    "lib": "yb",
+    "file": "z6.NEF",
+    "mode": "full",
+    "ok": true,
+    "maxRssMb": 680,
+    "t": {
+      "fetch": 38.466706,
+      "open": 66.666105,
+      "metadata": 5.372820000000004,
+      "decode": 1458.160237,
+      "thumb": 5.463945999999851
+    },
+    "info": {
+      "make": "Nikon",
+      "model": "Z 6",
+      "width": 6064,
+      "height": 4040,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 1008,
+      "maximum": 16383,
+      "cam_mul": [
+        1.189453125,
+        1,
+        2.12109375,
+        1
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        6048,
+        4024,
+        0
+      ],
+      "out": [
+        6064,
+        4040,
+        3,
+        8,
+        73495680
+      ],
+      "thumbData": [
+        "jpeg",
+        6048,
+        4024,
+        1293562
+      ]
+    },
+    "wallMs": 1619,
+    "sizeMb": 47.5
+  },
+  {
+    "lib": "yb",
+    "file": "z6.NEF",
+    "mode": "half",
+    "ok": true,
+    "maxRssMb": 477,
+    "t": {
+      "fetch": 41.23272,
+      "open": 68.26511400000001,
+      "metadata": 5.454988000000014,
+      "decode": 256.518659,
+      "thumb": 1.6038839999999936
+    },
+    "info": {
+      "make": "Nikon",
+      "model": "Z 6",
+      "width": 6064,
+      "height": 4040,
+      "colors": 3,
+      "filters": 3031741620,
+      "cdesc": "RGBG",
+      "black": 1008,
+      "maximum": 16383,
+      "cam_mul": [
+        1.189453125,
+        1,
+        2.12109375,
+        1
+      ],
+      "hasCmatrix": true,
+      "hasCamXyz": true,
+      "thumb": [
+        6048,
+        4024,
+        0
+      ],
+      "out": [
+        3032,
+        2020,
+        3,
+        8,
+        18373920
+      ],
+      "thumbData": [
+        "jpeg",
+        6048,
+        4024,
+        1293562
+      ]
+    },
+    "wallMs": 432,
+    "sizeMb": 47.5
+  }
+]
