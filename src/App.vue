@@ -1,11 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import HexViewer from './components/HexViewer.vue'
 import PlaceholderPanel from './components/PlaceholderPanel.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
+import { createFileReader } from './core/io'
+import { useSelection } from './composables/useSelection'
 import { useStructureParser } from './composables/useStructureParser'
 
 const parser = useStructureParser()
 const { status, result, error } = parser
+
+const { setParseResult } = useSelection()
+watch(result, (r) => setParseResult(r), { immediate: true })
+
+const currentFile = ref<File | null>(null)
+const reader = computed(() =>
+  currentFile.value ? createFileReader(currentFile.value) : null,
+)
 
 const input = ref<HTMLInputElement | null>(null)
 const fileName = ref('')
@@ -15,6 +26,7 @@ const tab = ref<'hex' | 'previews'>('hex')
 function load(file: File | undefined) {
   if (!file) return
   fileName.value = file.name
+  currentFile.value = file
   parser.parse(file)
 }
 
@@ -112,7 +124,10 @@ function onDrop(event: DragEvent) {
               Previews
             </button>
           </div>
-          <PlaceholderPanel v-if="tab === 'hex'" title="Hex viewer" />
+          <template v-if="tab === 'hex'">
+            <HexViewer v-if="reader" :reader="reader" />
+            <PlaceholderPanel v-else title="Hex viewer" />
+          </template>
           <PlaceholderPanel v-else title="Previews" />
         </div>
       </div>
