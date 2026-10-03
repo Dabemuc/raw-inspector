@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "pages:dev": "npm run build && wrangler pages dev",
     "pages:deploy": "npm run build && wrangler pages deploy",
+    "fixtures": "node scripts/fetch-fixtures.mjs",
     "sandcastle": "npx tsx .sandcastle/main.ts",
     "typecheck": "vue-tsc -b",
     "test": "vitest run",
