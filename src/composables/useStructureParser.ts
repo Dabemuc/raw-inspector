@@ -3,6 +3,7 @@ import type { ParseResult } from '../core/model'
 import type { StructureRequest, StructureResponse } from '../workers/protocol'
 
 export type ParserStatus = 'idle' | 'parsing' | 'done' | 'error'
+export type ParserErrorKind = 'read-error' | 'worker-crash'
 
 /** The subset of Worker the composable needs; lets tests inject a fake. */
 export interface WorkerLike {
@@ -25,6 +26,7 @@ export function useStructureParser(
   const status = ref<ParserStatus>('idle')
   const result = shallowRef<ParseResult | null>(null)
   const error = ref<string | null>(null)
+  const errorKind = ref<ParserErrorKind | null>(null)
   let worker: WorkerLike | null = null
   let currentId = 0
 
@@ -40,12 +42,14 @@ export function useStructureParser(
     status.value = 'parsing'
     result.value = null
     error.value = null
+    errorKind.value = null
 
     const w = createWorker()
     worker = w
-    const fail = (message: string) => {
+    const fail = (message: string, kind: ParserErrorKind) => {
       if (id !== currentId) return
       error.value = message
+      errorKind.value = kind
       status.value = 'error'
       stop()
     }
@@ -56,10 +60,11 @@ export function useStructureParser(
         status.value = 'done'
         stop()
       } else {
-        fail(data.message)
+        fail(data.message, 'read-error')
       }
     }
-    w.onerror = (event) => fail(event.message || 'Worker failed')
+    w.onerror = (event) =>
+      fail(event.message || 'Worker failed', 'worker-crash')
     w.postMessage({ type: 'parse', id, file })
   }
 
@@ -70,5 +75,5 @@ export function useStructureParser(
     status.value = 'idle'
   }
 
-  return { parse, cancel, result, status, error }
+  return { parse, cancel, result, status, error, errorKind }
 }
