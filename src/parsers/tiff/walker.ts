@@ -11,7 +11,13 @@ import {
   type ImageProps,
   type Piece,
 } from './imageData'
-import { summarizeValue, summaryByteLength, tiffTypeInfo } from './values'
+import { formatTagValue, tagName, type TagContext } from './tags'
+import {
+  decodeValue,
+  summarizeValue,
+  summaryByteLength,
+  tiffTypeInfo,
+} from './values'
 
 const HEADER_SIZE = 8
 const ENTRY_SIZE = 12
@@ -123,7 +129,7 @@ export async function walkTiff(
     w.report(headerId, 'warning', 'Header has no first IFD (offset 0)')
     return true
   }
-  await w.walkChain(firstIfd, 4, rootId, 0)
+  await w.walkChain(firstIfd, 4, rootId, 0, 'tiff')
   return true
 }
 
@@ -182,6 +188,7 @@ class Walker {
     pointerAt: number,
     parentId: string,
     depth: number,
+    context: TagContext,
     name?: string,
   ): Promise<void> {
     let offset = start
@@ -229,7 +236,7 @@ class Walker {
         return
       }
       this.visited.add(offset)
-      const next = await this.walkIfd(label, offset, parentId, depth)
+      const next = await this.walkIfd(label, offset, parentId, depth, context)
       if (next === null) return
       pointerAt = next.pointerAt
       offset = next.offset
@@ -242,6 +249,7 @@ class Walker {
     offset: number,
     parentId: string,
     depth: number,
+    context: TagContext,
   ): Promise<{ offset: number; pointerAt: number } | null> {
     const size = this.reader.size
     const count = new ByteView(
@@ -276,7 +284,7 @@ class Walker {
 
     const tags: IfdTags = new Map()
     for (let i = 0; i < count; i++) {
-      await this.walkEntry(ifdId, table, offset, i, depth, tags)
+      await this.walkEntry(ifdId, table, offset, i, depth, tags, context)
     }
     await this.addImageData(ifdId, label, tags)
     return { offset: table.u32(length - 4), pointerAt: offset + length - 4 }
@@ -289,6 +297,7 @@ class Walker {
     index: number,
     depth: number,
     tags: IfdTags,
+    context: TagContext,
   ): Promise<void> {
     const at = 2 + index * ENTRY_SIZE
     const entryOffset = ifdOffset + at
@@ -305,7 +314,7 @@ class Walker {
     }
     const entryId = this.b.addNode({
       kind: 'entry',
-      label: `Tag ${hex16(tag)}`,
+      label: tagName(context, tag),
       offset: entryOffset,
       length: ENTRY_SIZE,
       parentId: ifdId,
@@ -316,7 +325,7 @@ class Walker {
 
     const field = table.bytes(at + 8, 4)
     if (!info) {
-      stored.rawValue = Array.from(field, (x) => hex(x)).join(' ')
+      stored.raw = Array.from(field, (x) => hex(x)).join(' ')
       this.report(entryId, 'warning', `Unknown field type ${typeCode}`)
       return
     }
@@ -361,13 +370,14 @@ class Walker {
         summaryByteLength(info.name, info.size, count),
       )
     }
-    stored.value = summarizeValue(
-      info.name,
-      info.size,
-      count,
-      bytes,
-      this.little,
-    )
+    const raw = summarizeValue(info.name, info.size, count, bytes, this.little)
+    stored.raw = raw
+    stored.value =
+      formatTagValue(
+        context,
+        tag,
+        decodeValue(info.name, info.size, count, bytes, this.little),
+      ) ?? raw
 
     if (!isMakerNote) {
       tags.set(tag, {
@@ -387,6 +397,18 @@ class Walker {
       if (info.name !== 'LONG' && info.name !== 'IFD') return
       await this.descend(entryId, tag, subName, dataOffset, count, depth)
     }
+  }
+
+  private subIfdContext(tag: number): TagContext {
+    switch (tag) {
+      case TAG_EXIF_IFD:
+        return 'exif'
+      case TAG_GPS_IFD:
+        return 'gps'
+      case TAG_INTEROP_IFD:
+        return 'interop'
+    }
+    return 'tiff'
   }
 
   private subIfdName(tag: number): string | undefined {
@@ -422,7 +444,14 @@ class Walker {
       if (target === 0) continue
       const base = subName ?? `IFD ${hex16(tag)}`
       const name = tag === TAG_SUBIFDS || count > 1 ? `${base}${i}` : base
-      await this.walkChain(target, dataOffset + i * 4, entryId, depth + 1, name)
+      await this.walkChain(
+        target,
+        dataOffset + i * 4,
+        entryId,
+        depth + 1,
+        this.subIfdContext(tag),
+        name,
+      )
     }
     if (count > n) {
       this.report(

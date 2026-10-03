@@ -1,4 +1,5 @@
 import { ByteView, hex32 } from '../../core/binary'
+import type { Rational, TagValue } from './tags'
 
 /** TIFF field type ids (1-12 from TIFF 6.0, 13 from TIFF Technical Note 1 / EXIF). */
 const TYPES: Record<number, { name: string; size: number }> = {
@@ -103,4 +104,59 @@ export function summarizeValue(
   }
   const more = count > shown ? `, … (${count - shown} more)` : ''
   return items.join(typeName === 'UNDEFINED' ? ' ' : ', ') + more
+}
+
+/** Decodes up to MAX_SUMMARY_ITEMS items of a field for tag formatters. */
+export function decodeValue(
+  typeName: string,
+  size: number,
+  count: number,
+  bytes: Uint8Array,
+  littleEndian: boolean,
+): TagValue {
+  const view = new ByteView(bytes, littleEndian)
+  if (typeName === 'ASCII') {
+    const { text } = view.ascii(0, Math.min(count, MAX_ASCII_CHARS))
+    return { type: typeName, count, items: [], text, littleEndian }
+  }
+  const shown = Math.min(count, MAX_SUMMARY_ITEMS)
+  const items: (number | Rational)[] = []
+  for (let i = 0; i < shown; i++) {
+    const at = i * size
+    switch (typeName) {
+      case 'BYTE':
+      case 'UNDEFINED':
+        items.push(view.u8(at))
+        break
+      case 'SBYTE':
+        items.push(view.i8(at))
+        break
+      case 'SHORT':
+        items.push(view.u16(at))
+        break
+      case 'SSHORT':
+        items.push(view.i16(at))
+        break
+      case 'LONG':
+      case 'IFD':
+        items.push(view.u32(at))
+        break
+      case 'SLONG':
+        items.push(view.i32(at))
+        break
+      case 'RATIONAL':
+        items.push(view.rational(at))
+        break
+      case 'SRATIONAL':
+        items.push(view.srational(at))
+        break
+      case 'FLOAT':
+        items.push(view.f32(at))
+        break
+      case 'DOUBLE':
+        items.push(view.f64(at))
+        break
+    }
+  }
+  return { type: typeName, count, items, littleEndian }
 }
