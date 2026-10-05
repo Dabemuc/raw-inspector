@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CameraPanel from '../components/CameraPanel.vue'
+import MetadataBrowser from '../components/MetadataBrowser.vue'
 import OverviewMainImage from '../components/OverviewMainImage.vue'
 import PlaceholderPanel from '../components/PlaceholderPanel.vue'
 import PreviewGallery from '../components/PreviewGallery.vue'
@@ -13,6 +14,7 @@ const {
   render,
   renderFull,
   parseResult,
+  metadata,
 } = useInspection()
 </script>
 
@@ -49,7 +51,13 @@ const {
 
     <!-- Slot: metadata browser (#34). -->
     <section data-testid="slot-metadata">
-      <PlaceholderPanel title="Metadata" />
+      <PlaceholderPanel title="Metadata">
+        <MetadataBrowser
+          :result="metadata.result.value"
+          :status="metadata.status.value"
+          :file-name="fileName"
+        />
+      </PlaceholderPanel>
     </section>
 
     <details class="sensor" data-testid="sensor-colour">
