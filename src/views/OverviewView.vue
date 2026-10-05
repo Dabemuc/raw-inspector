@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import KeyFactsCard from '../components/KeyFactsCard.vue'
 import CameraPanel from '../components/CameraPanel.vue'
 import OverviewMainImage from '../components/OverviewMainImage.vue'
 import PlaceholderPanel from '../components/PlaceholderPanel.vue'
 import PreviewGallery from '../components/PreviewGallery.vue'
+import { computed } from 'vue'
 import { useInspection } from '../composables/useInspection'
+import { buildKeyFacts } from '../metadata/keyFacts'
 
 const {
   reader,
@@ -13,7 +16,16 @@ const {
   render,
   renderFull,
   parseResult,
+  file,
+  metadata,
 } = useInspection()
+
+const facts = computed(() =>
+  buildKeyFacts(metadata.result.value, {
+    format: parseResult.value?.format?.name,
+    fileSize: file.value?.size,
+  }),
+)
 </script>
 
 <template>
@@ -34,9 +46,11 @@ const {
           @cancel="decoder.cancel()"
         />
       </div>
-      <!-- Slot: key facts card (#33). -->
       <aside class="facts" data-testid="slot-key-facts">
-        <PlaceholderPanel title="Key facts" />
+        <KeyFactsCard
+          :facts="facts"
+          :loading="metadata.status.value === 'loading'"
+        />
       </aside>
     </div>
 
