@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed } from 'vue'
 import type { DecodedImage, DecodeStatus } from '../composables/useRawDecode'
+import ImageViewer from './ImageViewer.vue'
 import type { DecodeStage } from '../workers/libraw-protocol'
 
 const props = defineProps<{
@@ -24,65 +25,9 @@ const STAGES: Record<DecodeStage, string> = {
   processing: 'Demosaicing…',
 }
 
-const zoom = ref<'fit' | '1:1'>('fit')
-const canvas = ref<HTMLCanvasElement | null>(null)
-const viewport = ref<HTMLElement | null>(null)
-
 const stageLabel = computed(() =>
   props.progress ? STAGES[props.progress] : 'Starting…',
 )
-
-function draw() {
-  const el = canvas.value
-  const img = props.image
-  if (!el || !img) return
-  el.width = img.width
-  el.height = img.height
-  el.getContext('2d')?.putImageData(
-    new ImageData(img.rgba, img.width, img.height),
-    0,
-    0,
-  )
-}
-
-watch(
-  () => props.image,
-  async () => {
-    await nextTick()
-    draw()
-  },
-  { flush: 'post' },
-)
-
-function download() {
-  canvas.value?.toBlob((blob) => {
-    if (!blob) return
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = props.fileName.replace(/\.[^.]*$/, '') + '.png'
-    a.click()
-    URL.revokeObjectURL(url)
-  }, 'image/png')
-}
-
-// Drag-to-pan by scrolling the viewport (used in 1:1 mode).
-let drag: { x: number; y: number; left: number; top: number } | null = null
-function onPointerDown(e: PointerEvent) {
-  const v = viewport.value
-  if (!v || zoom.value !== '1:1') return
-  drag = { x: e.clientX, y: e.clientY, left: v.scrollLeft, top: v.scrollTop }
-  v.setPointerCapture?.(e.pointerId)
-}
-function onPointerMove(e: PointerEvent) {
-  const v = viewport.value
-  if (!drag || !v) return
-  v.scrollLeft = drag.left - (e.clientX - drag.x)
-  v.scrollTop = drag.top - (e.clientY - drag.y)
-}
-function onPointerUp() {
-  drag = null
-}
 </script>
 
 <template>
@@ -106,25 +51,12 @@ function onPointerUp() {
       <button type="button" @click="emit('cancel')">Cancel</button>
     </div>
 
-    <template v-if="image">
-      <div class="toolbar">
-        <button
-          type="button"
-          :aria-pressed="zoom === 'fit'"
-          @click="zoom = 'fit'"
-        >
-          Fit
-        </button>
-        <button
-          type="button"
-          :aria-pressed="zoom === '1:1'"
-          @click="zoom = '1:1'"
-        >
-          1:1
-        </button>
-        <button type="button" data-testid="download-png" @click="download">
-          Download PNG
-        </button>
+    <ImageViewer
+      v-if="image"
+      :image="image"
+      :download-name="fileName.replace(/\.[^./\\]+$/, '') || 'file'"
+    >
+      <template #toolbar>
         <button
           v-if="!fullResolution"
           type="button"
@@ -133,7 +65,6 @@ function onPointerUp() {
         >
           Render full resolution
         </button>
-        <span class="size">{{ image.width }} × {{ image.height }}</span>
         <span
           v-if="error"
           class="error"
@@ -142,39 +73,18 @@ function onPointerUp() {
         >
           {{ error }}
         </span>
-      </div>
-      <div
-        ref="viewport"
-        class="viewport"
-        :class="zoom"
-        @pointerdown="onPointerDown"
-        @pointermove="onPointerMove"
-        @pointerup="onPointerUp"
-        @pointercancel="onPointerUp"
-      >
-        <canvas ref="canvas" data-testid="decode-canvas"></canvas>
-      </div>
-    </template>
+      </template>
+    </ImageViewer>
   </div>
 </template>
 
 <style scoped>
 .controls,
-.busy,
-.toolbar {
+.busy {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-}
-.toolbar {
-  margin-bottom: 8px;
-}
-.toolbar [aria-pressed='true'] {
-  border-color: var(--accent);
-}
-.size {
-  color: var(--text);
 }
 .error {
   flex-basis: 100%;
@@ -193,24 +103,5 @@ function onPointerUp() {
   to {
     transform: rotate(360deg);
   }
-}
-.viewport {
-  overflow: auto;
-  max-height: 70vh;
-  border: 1px solid var(--border);
-  background: var(--panel-bg);
-}
-.viewport.fit canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-}
-.viewport.\31\:1 {
-  cursor: grab;
-}
-.viewport.\31\:1 canvas {
-  display: block;
-  max-width: none;
 }
 </style>
