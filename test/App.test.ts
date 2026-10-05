@@ -24,6 +24,16 @@ vi.mock('../src/composables/useStructureParser', () => ({
 }))
 
 const decode = vi.fn() // never resolves: status stays 'decoding'
+const metadataRead = vi.fn()
+vi.mock('../src/composables/useMetadata', () => ({
+  useMetadata: () => ({
+    read: metadataRead,
+    cancel: vi.fn(),
+    status: ref('loading'),
+    result: shallowRef(null),
+    error: ref(null),
+  }),
+}))
 vi.mock('../src/composables/useRawDecode', () => ({
   useRawDecode: () => ({
     decode,
@@ -83,6 +93,16 @@ describe('App', () => {
     Object.defineProperty(input.element, 'files', { value: [file] })
     await input.trigger('change')
     expect(parse).toHaveBeenCalledWith(file)
+    expect(metadataRead).toHaveBeenCalledWith(file)
+  })
+
+  it('shows the metadata status in the header', () => {
+    result.value = exampleResult
+    status.value = 'done'
+    const w = mount(App)
+    expect(w.find('[data-testid="metadata-status"]').text()).toBe(
+      'Reading metadata…',
+    )
   })
 
   it('shows the parsing state', () => {
