@@ -70,6 +70,13 @@ const MAX_FIX_ATTEMPTS = 2;
 // Sandbox creation is retried this many times in total before giving up.
 const SANDBOX_CREATE_ATTEMPTS = 3;
 
+// The job name in .github/workflows/ci.yml. A PR is only merged once this
+// check has passed on its current head.
+const REQUIRED_CHECK = "ci";
+
+// Give up waiting for CI on a PR after this long and leave it open.
+const CI_TIMEOUT_MS = 30 * 60_000;
+
 // ---------------------------------------------------------------------------
 // Host helpers (git / gh run on the host, with the host's credentials)
 // ---------------------------------------------------------------------------
@@ -117,6 +124,14 @@ async function withCreateRetry<T>(
   }
 }
 
+// `gh pr update-branch` adds commits to the PR branch on GitHub only.
+// Fast-forward the local branch to them so agents build on, and the host
+// pushes, the latest head. A no-op when the local branch is ahead or the
+// remote branch doesn't exist yet.
+function syncBranch(branch: string) {
+  shOk("git", ["fetch", "origin", `${branch}:${branch}`]);
+}
+
 const CONVENTIONAL_TITLE =
   /^(feat|fix|refactor|perf|test|docs|build|ci|chore|style|revert)(\([\w./-]+\))?!?: .+/;
 
@@ -147,6 +162,7 @@ function openPullRequest(
   issue: { id: string; title: string; branch: string },
   title: string,
 ): number {
+  syncBranch(issue.branch);
   sh("git", ["push", "-u", "origin", issue.branch]);
   const existing = JSON.parse(
     sh("gh", [
@@ -183,27 +199,64 @@ function openPullRequest(
   return Number(url.split("/").at(-1));
 }
 
-// Wait for CI on the PR's current head. Returns true when every check passed.
-async function waitForChecks(pr: number): Promise<boolean> {
-  // Checks take a moment to register after a push; `gh pr checks` errors
-  // while there are none.
-  for (let i = 0; i < 30; i++) {
-    let registered = false;
+type RollupEntry = {
+  name?: string;
+  status?: string;
+  conclusion?: string;
+  state?: string;
+};
+const PASSED = new Set(["SUCCESS", "NEUTRAL", "SKIPPED"]);
+
+// Wait for CI to finish on the PR's current head. Returns whether it passed
+// and which commit it ran on, or undefined on timeout.
+//
+// Right after a push or `gh pr update-branch`, GitHub may still report the
+// previous head and its checks, or the new head without its checks. So the
+// result is only trusted once it belongs to the commit the remote branch
+// points at and includes the required check.
+async function waitForChecks(
+  pr: number,
+  branch: string,
+): Promise<{ passed: boolean; sha: string } | undefined> {
+  const deadline = Date.now() + CI_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    await sleep(15_000);
     try {
-      registered =
-        (JSON.parse(sh("gh", ["pr", "checks", `${pr}`, "--json", "name"])) as [])
-          .length > 0;
+      const head = sh("git", [
+        "ls-remote",
+        "origin",
+        `refs/heads/${branch}`,
+      ]).split(/\s/)[0];
+      const view = JSON.parse(
+        sh("gh", [
+          "pr",
+          "view",
+          `${pr}`,
+          "--json",
+          "headRefOid,statusCheckRollup",
+        ]),
+      ) as { headRefOid: string; statusCheckRollup: RollupEntry[] };
+      const checks = view.statusCheckRollup;
+      if (
+        view.headRefOid !== head ||
+        !checks.some((c) => c.name === REQUIRED_CHECK)
+      ) {
+        continue;
+      }
+      // Check runs report `status` then `conclusion`; commit statuses
+      // (e.g. from external apps) report `state`.
+      const results = checks.map((c) =>
+        c.status && c.status !== "COMPLETED"
+          ? "PENDING"
+          : (c.conclusion ?? c.state ?? "PENDING"),
+      );
+      if (results.some((r) => r === "PENDING" || r === "EXPECTED")) continue;
+      return { passed: results.every((r) => PASSED.has(r)), sha: head! };
     } catch {
-      // No checks reported yet.
+      // Transient git/gh failure; poll again.
     }
-    if (registered) break;
-    await sleep(10_000);
   }
-  return shOk(
-    "gh",
-    ["pr", "checks", `${pr}`, "--watch", "--fail-fast", "--interval", "20"],
-    true,
-  );
+  return undefined;
 }
 
 function pullBase() {
@@ -281,26 +334,26 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     issues.map((issue) =>
       withCreateRetry(issue.branch, () =>
         sandcastle.run({
-        hooks,
-        copyToWorktree,
-        // Each agent starts on its own branch via branchStrategy on run().
-        sandbox: podman(),
-        branchStrategy: { type: "branch", branch: issue.branch },
-        name: "implementer",
-        // Give each agent plenty of room to implement and iterate on tests.
-        maxIterations: 100,
-        // Sonnet for execution: fast and capable enough for typical issue work.
-        agent: sandcastle.claudeCode("claude-sonnet-5-5"),
-        promptFile: "./.sandcastle/implement-prompt.md",
-        // Prompt arguments substitute {{TASK_ID}}, {{ISSUE_TITLE}},
-        // and {{BRANCH}} placeholders in implement-prompt.md before the
-        // agent sees the prompt.
-        promptArgs: {
-          TASK_ID: issue.id,
-          ISSUE_TITLE: issue.title,
-          BRANCH: issue.branch,
-        },
-      }),
+          hooks,
+          copyToWorktree,
+          // Each agent starts on its own branch via branchStrategy on run().
+          sandbox: podman(),
+          branchStrategy: { type: "branch", branch: issue.branch },
+          name: "implementer",
+          // Give each agent plenty of room to implement and iterate on tests.
+          maxIterations: 100,
+          // Sonnet for execution: fast and capable enough for typical issue work.
+          agent: sandcastle.claudeCode("claude-sonnet-5-5"),
+          promptFile: "./.sandcastle/implement-prompt.md",
+          // Prompt arguments substitute {{TASK_ID}}, {{ISSUE_TITLE}},
+          // and {{BRANCH}} placeholders in implement-prompt.md before the
+          // agent sees the prompt.
+          promptArgs: {
+            TASK_ID: issue.id,
+            ISSUE_TITLE: issue.title,
+            BRANCH: issue.branch,
+          },
+        }),
       ),
     ),
   );
@@ -370,35 +423,49 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
 
     let merged = false;
     for (let attempt = 0; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
-      const mergeable =
-        shOk("gh", ["pr", "update-branch", `${pr}`]) &&
-        (await waitForChecks(pr)) &&
-        shOk("gh", ["pr", "merge", `${pr}`, "--squash"], true);
-      if (mergeable) {
-        merged = true;
-        break;
+      let problem: string;
+      try {
+        sh("gh", ["pr", "update-branch", `${pr}`]);
+        const ci = await waitForChecks(pr, issue.branch);
+        if (!ci) {
+          console.error(`  ✗ #${pr}: timed out waiting for CI`);
+          break;
+        }
+        if (ci.passed) {
+          // Pin the merge to the commit CI passed on.
+          merged = shOk(
+            "gh",
+            ["pr", "merge", `${pr}`, "--squash", "--match-head-commit", ci.sha],
+            true,
+          );
+          break;
+        }
+        problem = "CI failed";
+      } catch (err) {
+        problem = `could not update with ${BASE_BRANCH}: ${redact(err).split("\n")[0]}`;
       }
       if (attempt === MAX_FIX_ATTEMPTS) break;
 
-      console.log(`#${pr}: conflicts or failing CI, running fixer…`);
+      console.log(`#${pr}: ${problem}, running fixer…`);
+      syncBranch(issue.branch);
       try {
         const fix = await withCreateRetry(issue.branch, () =>
           sandcastle.run({
-          hooks,
-          copyToWorktree,
-          sandbox: podman(),
-          branchStrategy: { type: "branch", branch: issue.branch },
-          name: "fixer",
-          maxIterations: 10,
-          // Sonnet is sufficient for conflict resolution and CI fixes.
-          agent: sandcastle.claudeCode("claude-sonnet-5-5"),
-          promptFile: "./.sandcastle/fix-prompt.md",
-          promptArgs: {
-            PR_NUMBER: `${pr}`,
-            TASK_ID: issue.id,
-            ISSUE_TITLE: issue.title,
-            BRANCH: issue.branch,
-          },
+            hooks,
+            copyToWorktree,
+            sandbox: podman(),
+            branchStrategy: { type: "branch", branch: issue.branch },
+            name: "fixer",
+            maxIterations: 10,
+            // Sonnet is sufficient for conflict resolution and CI fixes.
+            agent: sandcastle.claudeCode("claude-sonnet-5-5"),
+            promptFile: "./.sandcastle/fix-prompt.md",
+            promptArgs: {
+              PR_NUMBER: `${pr}`,
+              TASK_ID: issue.id,
+              ISSUE_TITLE: issue.title,
+              BRANCH: issue.branch,
+            },
           }),
         );
         if (fix.commits.length === 0) break;
