@@ -11,17 +11,26 @@ const base = {
 } as const
 
 describe('DecodePanel', () => {
-  it('emits decode with half-size by default', async () => {
+  it('offers an on-demand render when nothing is rendered', async () => {
     const w = mount(DecodePanel, { props: { ...base } })
     await w.get('[data-testid="decode-button"]').trigger('click')
-    expect(w.emitted('decode')![0]).toEqual([{ halfSize: true }])
+    expect(w.emitted('render')).toHaveLength(1)
   })
 
-  it('emits full-size when selected', async () => {
-    const w = mount(DecodePanel, { props: { ...base } })
-    await w.findAll('input')[1]!.setValue(true)
-    await w.get('[data-testid="decode-button"]').trigger('click')
-    expect(w.emitted('decode')![0]).toEqual([{ halfSize: false }])
+  it('offers full resolution while showing the half-size image', async () => {
+    const image = {
+      width: 2,
+      height: 2,
+      rgba: new Uint8ClampedArray(16),
+    }
+    const w = mount(DecodePanel, {
+      props: { ...base, status: 'decoding', image, progress: 'processing' },
+    })
+    expect(w.find('[data-testid="decode-canvas"]').exists()).toBe(true)
+    await w.get('[data-testid="render-full"]').trigger('click')
+    expect(w.emitted('render-full')).toHaveLength(1)
+    await w.setProps({ fullResolution: true })
+    expect(w.find('[data-testid="render-full"]').exists()).toBe(false)
   })
 
   it('shows progress with a cancel button', async () => {
@@ -35,7 +44,7 @@ describe('DecodePanel', () => {
     expect(w.emitted('cancel')).toHaveLength(1)
   })
 
-  it('shows errors and keeps the button', () => {
+  it('shows errors and keeps the render button', () => {
     const w = mount(DecodePanel, {
       props: { ...base, status: 'error', error: 'Unsupported' },
     })

@@ -135,4 +135,16 @@ describe('useRawDecode', () => {
     f.reply(1, result(2))
     expect(d.status.value).toBe('done')
   })
+
+  it('keeps the previous image while re-decoding with keepImage', () => {
+    const f = fakeWorkers()
+    const d = useRawDecode(f.factory)
+    d.decode(file)
+    f.reply(0, result(1))
+    d.decode(file, { halfSize: false }, true)
+    expect(d.status.value).toBe('decoding')
+    expect(d.image.value?.width).toBe(2)
+    f.reply(1, { ...result(2), width: 4 } as LibRawResponse)
+    expect(d.image.value?.width).toBe(4)
+  })
 })

@@ -23,6 +23,19 @@ vi.mock('../src/composables/useStructureParser', () => ({
   }),
 }))
 
+const decode = vi.fn() // never resolves: status stays 'decoding'
+vi.mock('../src/composables/useRawDecode', () => ({
+  useRawDecode: () => ({
+    decode,
+    cancel: vi.fn(),
+    status: ref('decoding'),
+    progress: ref(null),
+    image: shallowRef(null),
+    metadata: shallowRef(null),
+    error: ref(null),
+  }),
+}))
+
 import App from '../src/App.vue'
 
 describe('App', () => {
@@ -48,6 +61,19 @@ describe('App', () => {
       dataTransfer: { files: [file], types: ['Files'] },
     })
     expect(parse).toHaveBeenCalledWith(file)
+  })
+
+  it('shows parsed structure while the render is still running', async () => {
+    const w = mount(App)
+    await w.find('[data-testid="app"]').trigger('drop', {
+      dataTransfer: { files: [new File(['x'], 'a.dng')], types: ['Files'] },
+    })
+    expect(decode).toHaveBeenCalled()
+    status.value = 'done'
+    result.value = exampleResult
+    await w.vm.$nextTick()
+    expect(w.find('[data-testid="summary"]').exists()).toBe(true)
+    expect(w.get('[data-testid="render-status"]').text()).toContain('Rendering')
   })
 
   it('parses a picked file', async () => {

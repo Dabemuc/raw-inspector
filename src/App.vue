@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import FileProblem from './components/FileProblem.vue'
+import RenderStatus from './components/RenderStatus.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
 import { fileProblem } from './core/model'
 import { useInspection } from './composables/useInspection'
@@ -112,7 +113,16 @@ function onDrop(event: DragEvent) {
         @open="pick"
         @update:mode="inspection.setMode"
         @show-warnings="toggleWarnings"
-      />
+      >
+        <template #status>
+          <RenderStatus
+            v-model:auto-render="inspection.autoRender.value"
+            :status="inspection.decoder.status.value"
+            :progress="inspection.decoder.progress.value"
+            :error="inspection.decoder.error.value"
+          />
+        </template>
+      </SummaryHeader>
       <FileProblem
         v-if="problem"
         :problem="problem"

@@ -50,14 +50,23 @@ export function useRawDecode(
     worker = null
   }
 
-  /** Decodes `file`; any decode still in flight is cancelled. */
-  function decode(file: File, options: DecodeOptions = { halfSize: true }) {
+  /**
+   * Decodes `file`; any decode still in flight is cancelled. With
+   * `keepImage` the previous image stays visible until the new one is ready.
+   */
+  function decode(
+    file: File,
+    options: DecodeOptions = { halfSize: true },
+    keepImage = false,
+  ) {
     stop()
     const id = ++currentId
     status.value = 'decoding'
     progress.value = null
-    image.value = null
-    metadata.value = null
+    if (!keepImage) {
+      image.value = null
+      metadata.value = null
+    }
     error.value = null
 
     const w = createWorker()
