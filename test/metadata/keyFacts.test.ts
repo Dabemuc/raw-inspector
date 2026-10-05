@@ -105,3 +105,23 @@ describe('buildKeyFacts', () => {
     expect(Object.keys(f)).toEqual(['camera'])
   })
 })
+
+describe('fact sources', () => {
+  it('records the group and tag a fact was read from', () => {
+    const facts = buildKeyFacts({
+      source: 'engine',
+      groups: [
+        {
+          id: 'EXIF:IFD0',
+          family: 'EXIF',
+          name: 'IFD0',
+          tags: [{ name: 'Model', value: 'X1' }],
+        },
+      ],
+    })
+    expect(facts.find((f) => f.id === 'camera')?.source).toEqual({
+      group: 'IFD0',
+      tag: { name: 'Model', value: 'X1' },
+    })
+  })
+})

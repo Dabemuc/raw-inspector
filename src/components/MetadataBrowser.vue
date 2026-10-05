@@ -11,6 +11,8 @@ import {
   toCsv,
   toJson,
 } from '../metadata/browse'
+import { findTagNode } from '../metadata/tagIndex'
+import type { TagIndex } from '../metadata/tagIndex'
 import type { MetadataGroup, MetadataTag } from '../metadata/types'
 import type { MetadataResult } from '../metadata/types'
 
@@ -18,6 +20,12 @@ const props = defineProps<{
   result: MetadataResult | null
   status: MetadataStatus
   fileName: string
+  /** Index of the structure tree's entries; enables "Show in file". */
+  tagIndex?: TagIndex | null
+}>()
+
+const emit = defineEmits<{
+  'show-in-file': [nodeId: string]
 }>()
 
 const TRUNCATE_AT = 200
@@ -61,6 +69,10 @@ function label(tag: MetadataTag): string {
 function shown(tag: MetadataTag): string {
   if (!showRaw.value) return tag.value
   return tag.raw === undefined ? tag.value : rawText(tag)
+}
+
+function nodeOf(g: MetadataGroup, tag: MetadataTag): string | null {
+  return props.tagIndex ? findTagNode(props.tagIndex, g.name, tag) : null
 }
 
 function rowKey(g: MetadataGroup, i: number): string {
@@ -193,6 +205,15 @@ function exportAs(ext: 'json' | 'csv') {
                   @click="expand(rowKey(g, i))"
                 >
                   show more
+                </button>
+                <button
+                  v-if="nodeOf(g, t)"
+                  type="button"
+                  class="more"
+                  data-testid="show-in-file"
+                  @click="emit('show-in-file', nodeOf(g, t)!)"
+                >
+                  Show in file
                 </button>
               </td>
             </tr>

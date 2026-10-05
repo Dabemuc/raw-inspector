@@ -11,6 +11,14 @@ export interface KeyFact {
   /** Outbound link shown next to the value; never fetched automatically. */
   href?: string
   linkLabel?: string
+  /** Where the value came from, so it can be linked to its bytes. */
+  source?: FactSource
+}
+
+/** The metadata group and tag a fact was read from. */
+export interface FactSource {
+  group: string
+  tag: MetadataTag
 }
 
 /** Facts that come from outside the metadata result. */
@@ -27,19 +35,31 @@ export interface KeyFactsContext {
  */
 type Candidate = string
 
-function findTag(
+function findLocated(
   result: MetadataResult,
   candidates: Candidate[],
-): MetadataTag | null {
+): FactSource | null {
   for (const c of candidates) {
     const [group, name] = c.split(':') as [string, string]
     for (const g of result.groups) {
       if (group !== '*' && g.name !== group) continue
       const tag = g.tags.find((t) => t.name === name && t.value !== '')
-      if (tag) return tag
+      if (tag) return { group: g.name, tag }
     }
   }
   return null
+}
+
+function findTag(
+  result: MetadataResult,
+  candidates: Candidate[],
+): MetadataTag | null {
+  return findLocated(result, candidates)?.tag ?? null
+}
+
+function src(result: MetadataResult, c: Candidate[]): Partial<KeyFact> {
+  const source = findLocated(result, c)
+  return source ? { source } : {}
 }
 
 function findText(result: MetadataResult, c: Candidate[]): string | null {
@@ -184,26 +204,35 @@ export function buildKeyFacts(
       make && model && !model.toLowerCase().startsWith(make.toLowerCase())
         ? `${make} ${model}`
         : (model ?? make)
-    add('Camera', 'camera', 'Camera', camera)
+    add(
+      'Camera',
+      'camera',
+      'Camera',
+      camera,
+      src(result, model ? ['IFD0:Model', '*:Model'] : ['IFD0:Make', '*:Make']),
+    )
+    const lensTags = [
+      'Composite:LensID',
+      '*:LensModel',
+      '*:LensType',
+      '*:LensID',
+      '*:Lens',
+    ]
     add(
       'Camera',
       'lens',
       'Lens',
-      findText(result, [
-        'Composite:LensID',
-        '*:LensModel',
-        '*:LensType',
-        '*:LensID',
-        '*:Lens',
-      ]),
+      findText(result, lensTags),
+      src(result, lensTags),
     )
 
-    const date = findText(result, [
+    const dateTags = [
       '*:DateTimeOriginal',
       '*:CreateDate',
       'IFD0:DateTime',
       '*:DateTime',
-    ])
+    ]
+    const date = findText(result, dateTags)
     if (date) {
       const offset = findText(result, [
         '*:OffsetTimeOriginal',
@@ -216,36 +245,45 @@ export function buildKeyFacts(
         'captured',
         'Captured',
         offset && !hasZone ? `${date} ${offset}` : date,
+        src(result, dateTags),
       )
     }
 
-    const shutter = tagNumber(result, [
-      '*:ExposureTime',
-      'Composite:ShutterSpeed',
-    ])
+    const shutterTags = ['*:ExposureTime', 'Composite:ShutterSpeed']
+    const shutter = tagNumber(result, shutterTags)
     add(
       'Exposure',
       'shutter',
       'Shutter',
       shutter ? formatShutter(shutter) : null,
+      src(result, shutterTags),
     )
-    const fnum = tagNumber(result, ['*:FNumber', 'Composite:Aperture'])
-    add('Exposure', 'aperture', 'Aperture', fnum ? `f/${trim(fnum, 1)}` : null)
-    const iso = tagNumber(result, [
-      '*:ISO',
-      '*:ISOSpeedRatings',
-      '*:RecommendedExposureIndex',
-    ])
-    add('Exposure', 'iso', 'ISO', iso ? String(Math.round(iso)) : null)
-    const ev = tagNumber(result, [
-      '*:ExposureCompensation',
-      '*:ExposureBiasValue',
-    ])
+    const fnumTags = ['*:FNumber', 'Composite:Aperture']
+    const fnum = tagNumber(result, fnumTags)
+    add(
+      'Exposure',
+      'aperture',
+      'Aperture',
+      fnum ? `f/${trim(fnum, 1)}` : null,
+      src(result, fnumTags),
+    )
+    const isoTags = ['*:ISO', '*:ISOSpeedRatings', '*:RecommendedExposureIndex']
+    const iso = tagNumber(result, isoTags)
+    add(
+      'Exposure',
+      'iso',
+      'ISO',
+      iso ? String(Math.round(iso)) : null,
+      src(result, isoTags),
+    )
+    const evTags = ['*:ExposureCompensation', '*:ExposureBiasValue']
+    const ev = tagNumber(result, evTags)
     add(
       'Exposure',
       'ev',
       'Exposure comp.',
       ev === null ? null : `${signed(ev, 2)} EV`,
+      src(result, evTags),
     )
     const focal = tagNumber(result, ['*:FocalLength'])
     const eq = tagNumber(result, ['*:FocalLengthIn35mmFormat'])
@@ -256,6 +294,7 @@ export function buildKeyFacts(
       focal
         ? `${trim(focal, 1)} mm${eq ? ` (${trim(eq, 0)} mm equiv.)` : ''}`
         : null,
+      src(result, ['*:FocalLength']),
     )
 
     const dim = dimensions(result)
@@ -285,7 +324,11 @@ export function buildKeyFacts(
         'gps',
         'Position',
         `${formatCoordinate(lat, 'N', 'S')}, ${formatCoordinate(lon, 'E', 'W')}`,
-        { href: osmLink(lat, lon), linkLabel: 'Open map' },
+        {
+          href: osmLink(lat, lon),
+          linkLabel: 'Open map',
+          ...src(result, ['GPS:GPSLatitude', 'GPSIFD:GPSLatitude']),
+        },
       )
       const alt = tagNumber(result, ['*:GPSAltitude'])
       if (alt !== null) {
