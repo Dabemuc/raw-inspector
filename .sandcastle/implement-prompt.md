@@ -35,17 +35,30 @@ If applicable, use RGR to complete the task.
 
 # FEEDBACK LOOPS
 
-Before committing, run `npm run typecheck` and `npm run test` to ensure the tests pass.
+Before committing, run the same checks CI runs and make sure they all pass:
+
+- `npm run lint`
+- `npm run format:check` (run `npm run format` to fix formatting)
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
 
 # COMMIT
 
-Make a git commit. The commit message must:
+Make git commits using the [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-1. Start with `RALPH:` prefix
-2. Include task completed + PRD reference
-3. Key decisions made
-4. Files changed
-5. Blockers or notes for next iteration
+```
+<type>(<optional scope>): <short imperative summary>
+
+<body>
+
+Refs #{{TASK_ID}}
+```
+
+- `<type>` is one of `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`.
+- The summary is lowercase, imperative, has no trailing period, and is at most 72 characters.
+- The body briefly covers key decisions and any blockers or notes for the next iteration.
+- Do NOT use any other prefix such as `RALPH:`.
 
 Keep it concise.
 
@@ -55,7 +68,10 @@ If the task is not complete, leave a comment on the issue with what was done.
 
 Do not close the issue - this will be done later.
 
-Once complete, output <promise>COMPLETE</promise>.
+Once complete, output a pull request title for the whole change in Conventional Commits format (it becomes the squash-merge commit on `main`), then the completion signal:
+
+<pr-title>feat(parser): detect CR2, NEF, ARW and DNG formats</pr-title>
+<promise>COMPLETE</promise>
 
 # FINAL RULES
 
