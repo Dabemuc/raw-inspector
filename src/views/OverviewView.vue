@@ -5,7 +5,8 @@ import PlaceholderPanel from '../components/PlaceholderPanel.vue'
 import PreviewGallery from '../components/PreviewGallery.vue'
 import { useInspection } from '../composables/useInspection'
 
-const { reader, fileName, file, decoder } = useInspection()
+const { reader, fileName, decoder, fullResolution, render, renderFull } =
+  useInspection()
 </script>
 
 <template>
@@ -20,7 +21,9 @@ const { reader, fileName, file, decoder } = useInspection()
         :image="decoder.image.value"
         :error="decoder.error.value"
         :file-name="fileName"
-        @decode="(options) => file && decoder.decode(file, options)"
+        :full-resolution="fullResolution"
+        @render="render()"
+        @render-full="renderFull()"
         @cancel="decoder.cancel()"
       />
     </PlaceholderPanel>

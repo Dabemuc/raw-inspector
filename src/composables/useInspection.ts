@@ -4,6 +4,25 @@ import { useRawDecode } from './useRawDecode'
 import { useSelection } from './useSelection'
 import { useStructureParser } from './useStructureParser'
 
+export const AUTO_RENDER_KEY = 'raw-inspector:auto-render'
+
+/** Auto-render defaults to on; any storage failure falls back to on. */
+export function readAutoRender(): boolean {
+  try {
+    return localStorage.getItem(AUTO_RENDER_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
+function writeAutoRender(value: boolean) {
+  try {
+    localStorage.setItem(AUTO_RENDER_KEY, String(value))
+  } catch {
+    // Storage unavailable; the setting only lasts for this session.
+  }
+}
+
 export type InspectionMode = 'overview' | 'technical'
 
 /** Anything other than `#technical` falls back to overview. */
@@ -43,12 +62,36 @@ export function createInspection() {
     })
   }
 
+  const autoRender = ref(readAutoRender())
+  watch(autoRender, writeAutoRender)
+  /** True once a full-resolution render was requested for the current file. */
+  const fullResolution = ref(false)
+  watch(decoder.status, (s) => {
+    if (s === 'error') fullResolution.value = false
+  })
+
+  /** Starts the half-size render (runs in parallel with structure parsing). */
+  function render() {
+    if (!file.value) return
+    fullResolution.value = false
+    decoder.decode(file.value, { halfSize: true })
+  }
+
+  /** Re-decodes at full size, keeping the current image until it is ready. */
+  function renderFull() {
+    if (!file.value) return
+    fullResolution.value = true
+    decoder.decode(file.value, { halfSize: false }, true)
+  }
+
   /** Loads a new file, cancelling every running job and resetting state. */
   function load(next: File) {
     decoder.cancel()
     selection.clear()
     file.value = next
+    fullResolution.value = false
     parser.parse(next)
+    if (autoRender.value) render()
   }
 
   function reset() {
@@ -56,6 +99,7 @@ export function createInspection() {
     parser.cancel()
     selection.setParseResult(null)
     file.value = null
+    fullResolution.value = false
   }
 
   return {
@@ -65,6 +109,10 @@ export function createInspection() {
     mode,
     setMode,
     load,
+    autoRender,
+    fullResolution,
+    render,
+    renderFull,
     reset,
     parser,
     decoder,

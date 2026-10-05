@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import type { DecodedImage, DecodeStatus } from '../composables/useRawDecode'
-import type { DecodeOptions, DecodeStage } from '../workers/libraw-protocol'
+import type { DecodeStage } from '../workers/libraw-protocol'
 
 const props = defineProps<{
   status: DecodeStatus
@@ -9,9 +9,11 @@ const props = defineProps<{
   image: DecodedImage | null
   error: string | null
   fileName: string
+  fullResolution?: boolean
 }>()
 const emit = defineEmits<{
-  decode: [options: DecodeOptions]
+  render: []
+  'render-full': []
   cancel: []
 }>()
 
@@ -22,7 +24,6 @@ const STAGES: Record<DecodeStage, string> = {
   processing: 'Demosaicing…',
 }
 
-const halfSize = ref(true)
 const zoom = ref<'fit' | '1:1'>('fit')
 const canvas = ref<HTMLCanvasElement | null>(null)
 const viewport = ref<HTMLElement | null>(null)
@@ -86,20 +87,9 @@ function onPointerUp() {
 
 <template>
   <div class="decode" data-testid="decode-panel">
-    <div v-if="status === 'idle' || status === 'error'" class="controls">
-      <label>
-        <input v-model="halfSize" type="radio" :value="true" /> Half-size (fast)
-      </label>
-      <label>
-        <input v-model="halfSize" type="radio" :value="false" /> Full-size
-        (slow, more memory)
-      </label>
-      <button
-        type="button"
-        data-testid="decode-button"
-        @click="emit('decode', { halfSize })"
-      >
-        Decode RAW
+    <div v-if="!image && status !== 'decoding'" class="controls">
+      <button type="button" data-testid="decode-button" @click="emit('render')">
+        Render RAW
       </button>
       <p v-if="error" class="error" role="alert" data-testid="decode-error">
         {{ error }}
@@ -107,7 +97,7 @@ function onPointerUp() {
     </div>
 
     <div
-      v-else-if="status === 'decoding'"
+      v-if="status === 'decoding'"
       class="busy"
       data-testid="decode-progress"
     >
@@ -116,7 +106,7 @@ function onPointerUp() {
       <button type="button" @click="emit('cancel')">Cancel</button>
     </div>
 
-    <template v-else-if="image">
+    <template v-if="image">
       <div class="toolbar">
         <button
           type="button"
@@ -135,8 +125,23 @@ function onPointerUp() {
         <button type="button" data-testid="download-png" @click="download">
           Download PNG
         </button>
-        <button type="button" @click="emit('cancel')">Close</button>
+        <button
+          v-if="!fullResolution"
+          type="button"
+          data-testid="render-full"
+          @click="emit('render-full')"
+        >
+          Render full resolution
+        </button>
         <span class="size">{{ image.width }} × {{ image.height }}</span>
+        <span
+          v-if="error"
+          class="error"
+          role="alert"
+          data-testid="decode-error"
+        >
+          {{ error }}
+        </span>
       </div>
       <div
         ref="viewport"
