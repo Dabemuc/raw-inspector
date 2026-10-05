@@ -1,11 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { KeyFact } from '../metadata/keyFacts'
+import { findTagNode } from '../metadata/tagIndex'
+import type { TagIndex } from '../metadata/tagIndex'
 
 const props = defineProps<{
   facts: KeyFact[]
   loading: boolean
+  /** Index of the structure tree's entries; enables "Show in file". */
+  tagIndex?: TagIndex | null
 }>()
+
+const emit = defineEmits<{
+  'show-in-file': [nodeId: string]
+}>()
+
+function nodeOf(f: KeyFact): string | null {
+  return props.tagIndex && f.source
+    ? findTagNode(props.tagIndex, f.source.group, f.source.tag)
+    : null
+}
 
 const showSkeleton = computed(() => props.loading && props.facts.length === 0)
 </script>
@@ -28,6 +42,15 @@ const showSkeleton = computed(() => props.loading && props.facts.length === 0)
             rel="noopener noreferrer"
             >{{ f.linkLabel ?? 'Open' }}</a
           >
+          <button
+            v-if="nodeOf(f)"
+            type="button"
+            class="show"
+            :data-testid="`show-in-file-${f.id}`"
+            @click="emit('show-in-file', nodeOf(f)!)"
+          >
+            Show in file
+          </button>
         </dd>
       </template>
     </dl>
@@ -60,7 +83,8 @@ dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
-dd a {
+dd a,
+dd .show {
   margin-left: 6px;
 }
 .skeleton {

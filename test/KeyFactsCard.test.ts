@@ -34,3 +34,35 @@ describe('KeyFactsCard', () => {
     expect(w.find('img, iframe').exists()).toBe(false)
   })
 })
+
+describe('KeyFactsCard show in file', () => {
+  const tag = { name: 'Model', value: 'X1' }
+  const facts = [
+    {
+      id: 'camera',
+      group: 'Camera' as const,
+      label: 'Camera',
+      value: 'X1',
+      source: { group: 'IFD0', tag },
+    },
+    { id: 'format', group: 'File' as const, label: 'Format', value: 'DNG' },
+  ]
+
+  it('links matched facts only and emits the node id', async () => {
+    const tagIndex = {
+      byId: new Map<string, string>(),
+      byName: new Map([['IFD0:Model', 'n3']]),
+    }
+    const w = mount(KeyFactsCard, {
+      props: { facts, loading: false, tagIndex },
+    })
+    expect(w.findAll('button')).toHaveLength(1)
+    await w.get('[data-testid="show-in-file-camera"]').trigger('click')
+    expect(w.emitted('show-in-file')).toEqual([['n3']])
+  })
+
+  it('shows no action without a match', () => {
+    const w = mount(KeyFactsCard, { props: { facts, loading: false } })
+    expect(w.find('button').exists()).toBe(false)
+  })
+})

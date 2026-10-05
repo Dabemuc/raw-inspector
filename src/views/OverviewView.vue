@@ -7,6 +7,7 @@ import PlaceholderPanel from '../components/PlaceholderPanel.vue'
 import { computed } from 'vue'
 import { useInspection } from '../composables/useInspection'
 import { buildKeyFacts } from '../metadata/keyFacts'
+import { buildTagIndex } from '../metadata/tagIndex'
 
 const {
   reader,
@@ -27,6 +28,9 @@ const facts = computed(() =>
     format: parseResult.value?.format?.name,
     fileSize: file.value?.size,
   }),
+)
+const tagIndex = computed(() =>
+  parseResult.value ? buildTagIndex(parseResult.value) : null,
 )
 function showInFile(nodeId: string) {
   selectNode(nodeId)
@@ -57,6 +61,8 @@ function showInFile(nodeId: string) {
         <KeyFactsCard
           :facts="facts"
           :loading="metadata.status.value === 'loading'"
+          :tag-index="tagIndex"
+          @show-in-file="showInFile"
         />
       </aside>
     </div>
@@ -68,6 +74,8 @@ function showInFile(nodeId: string) {
           :result="metadata.result.value"
           :status="metadata.status.value"
           :file-name="fileName"
+          :tag-index="tagIndex"
+          @show-in-file="showInFile"
         />
       </PlaceholderPanel>
     </section>

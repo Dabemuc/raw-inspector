@@ -155,3 +155,23 @@ describe('MetadataBrowser', () => {
     )
   })
 })
+
+describe('MetadataBrowser show in file', () => {
+  it('offers the action only for tags with a node and emits its id', async () => {
+    const tagIndex = {
+      byId: new Map([['IFD0:271', 'n7']]),
+      byName: new Map<string, string>(),
+    }
+    const w = mountIt({ tagIndex })
+    const rows = w.findAll('[data-testid="metadata-row"]')
+    const buttons = w.findAll('[data-testid="show-in-file"]')
+    expect(rows.length).toBeGreaterThan(buttons.length)
+    expect(buttons).toHaveLength(1)
+    await buttons[0]!.trigger('click')
+    expect(w.emitted('show-in-file')).toEqual([['n7']])
+  })
+
+  it('has no action without an index', () => {
+    expect(mountIt().find('[data-testid="show-in-file"]').exists()).toBe(false)
+  })
+})
