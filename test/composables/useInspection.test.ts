@@ -19,6 +19,17 @@ vi.mock('../../src/composables/useStructureParser', () => ({
     errorKind: ref(null),
   }),
 }))
+const metadataRead = vi.fn()
+const metadataCancel = vi.fn()
+vi.mock('../../src/composables/useMetadata', () => ({
+  useMetadata: () => ({
+    read: metadataRead,
+    cancel: metadataCancel,
+    status: ref('idle'),
+    result: ref(null),
+    error: ref(null),
+  }),
+}))
 vi.mock('../../src/composables/useRawDecode', () => ({
   useRawDecode: () => ({
     cancel: decoderCancel,
@@ -41,6 +52,8 @@ describe('useInspection', () => {
     parse.mockClear()
     decoderCancel.mockClear()
     decoderDecode.mockClear()
+    metadataRead.mockClear()
+    metadataCancel.mockClear()
     decoderStatus.value = 'idle'
     localStorage.clear()
     vi.restoreAllMocks()
@@ -150,5 +163,15 @@ describe('useInspection', () => {
       throw new Error('denied')
     })
     expect(createInspection().autoRender.value).toBe(true)
+  })
+
+  it('reads metadata on load and cancels it on a new file and on reset', () => {
+    const s = createInspection()
+    const a = new File([new Uint8Array(4)], 'a.dng')
+    s.load(a)
+    expect(metadataRead).toHaveBeenCalledWith(a)
+    expect(metadataCancel).toHaveBeenCalledTimes(1)
+    s.reset()
+    expect(metadataCancel).toHaveBeenCalledTimes(2)
   })
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import FileProblem from './components/FileProblem.vue'
+import MetadataStatus from './components/MetadataStatus.vue'
 import RenderStatus from './components/RenderStatus.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
 import { fileProblem } from './core/model'
@@ -115,6 +116,10 @@ function onDrop(event: DragEvent) {
         @show-warnings="toggleWarnings"
       >
         <template #status>
+          <MetadataStatus
+            :status="inspection.metadata.status.value"
+            :error="inspection.metadata.error.value"
+          />
           <RenderStatus
             v-model:auto-render="inspection.autoRender.value"
             :status="inspection.decoder.status.value"

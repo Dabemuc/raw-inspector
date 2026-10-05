@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@colorhythm/libraw-wasm": "^1.1.1",
+    "@uswriting/exiftool": "1.0.9",
     "vue": "^3.5.42",
     "zod": "^4.6.5"
   },
