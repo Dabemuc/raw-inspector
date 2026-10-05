@@ -2,9 +2,23 @@
 import { computed } from 'vue'
 import { collectIssues } from '../core/model'
 import type { ParseResult } from '../core/model'
+import type { InspectionMode } from '../composables/useInspection'
 
-const props = defineProps<{ fileName: string; result: ParseResult }>()
-defineEmits<{ open: []; 'show-warnings': [] }>()
+const props = defineProps<{
+  fileName: string
+  result: ParseResult
+  mode?: InspectionMode
+}>()
+defineEmits<{
+  open: []
+  'show-warnings': []
+  'update:mode': [mode: InspectionMode]
+}>()
+
+const modes: { value: InspectionMode; label: string }[] = [
+  { value: 'overview', label: 'Overview' },
+  { value: 'technical', label: 'Technical' },
+]
 
 const camera = computed(() => {
   const f = props.result.format
@@ -60,6 +74,21 @@ function formatSize(bytes: number): string {
         </dd>
       </div>
     </dl>
+    <div class="mode-switch" role="group" aria-label="View mode">
+      <button
+        v-for="m in modes"
+        :key="m.value"
+        type="button"
+        :data-testid="`mode-${m.value}`"
+        :aria-pressed="mode === m.value"
+        @click="$emit('update:mode', m.value)"
+      >
+        {{ m.label }}
+      </button>
+    </div>
+    <div class="status-area" data-testid="status-area" aria-live="polite">
+      <slot name="status" />
+    </div>
     <button type="button" data-testid="open-another" @click="$emit('open')">
       Open another file
     </button>
@@ -97,6 +126,17 @@ dd {
 }
 [data-testid='open-another'] {
   margin-left: auto;
+}
+.mode-switch {
+  display: inline-flex;
+}
+.mode-switch button[aria-pressed='true'] {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.status-area {
+  display: flex;
+  gap: 8px;
 }
 .badge.has {
   border-color: var(--accent);
