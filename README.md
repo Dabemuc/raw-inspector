@@ -32,6 +32,8 @@ npm run preview   # serve the production build locally
 
 ## Deploy to Cloudflare Pages
 
+Production is deployed from the `release` branch, not `main`. To release, run the **Release** workflow (Actions tab, or `gh workflow run release`). It checks that CI passed on the latest `main` commit and fast-forwards `release` to it.
+
 ### Option A: Git integration (recommended)
 
 Connect the repository in the Cloudflare dashboard (Workers & Pages → Create → Pages → Connect to Git) with:
@@ -41,6 +43,7 @@ Connect the repository in the Cloudflare dashboard (Workers & Pages → Create �
 | Framework preset       | Vue             |
 | Build command          | `npm run build` |
 | Build output directory | `dist`          |
+| Production branch      | `release`       |
 
 ### Option B: Direct upload via Wrangler
 
@@ -48,6 +51,8 @@ Connect the repository in the Cloudflare dashboard (Workers & Pages → Create �
 npx wrangler login
 npm run pages:deploy
 ```
+
+This deploys your local build to production (`--branch=release`).
 
 `npm run pages:dev` runs the production build locally on the Cloudflare Pages runtime.
 

@@ -1,0 +1,49 @@
+name: Release
+
+# Promotes main to the `release` branch, which Cloudflare Pages deploys to
+# production. Run it from the Actions tab or with `gh workflow run release`.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Require green CI on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          conclusion=$(gh run list --workflow ci.yml --branch main --event push \
+            --commit "$sha" --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::CI on main ($sha) is '${conclusion:-not finished}', not 'success'."
+            exit 1
+          fi
+
+      - name: Fast-forward release to main
+        run: |
+          {
+            echo "## Released $(git rev-parse --short HEAD)"
+            echo
+            if git rev-parse -q --verify origin/release >/dev/null; then
+              git log --format='- %s' origin/release..HEAD
+            else
+              echo "First release."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          # A plain push only fast-forwards; it fails if release has diverged.
+          git push origin HEAD:refs/heads/release
