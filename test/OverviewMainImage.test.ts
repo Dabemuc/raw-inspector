@@ -56,6 +56,31 @@ describe('OverviewMainImage', () => {
     expect(
       w.findAll('[data-testid="source-preview"]')[1].attributes('aria-pressed'),
     ).toBe('true')
+    expect(w.find('[data-testid="source-render"]').exists()).toBe(false)
+  })
+
+  it('shows one thumbnail per preview with size and bytes', async () => {
+    const w = mountIt()
+    await flushPromises()
+    const items = w.findAll('[data-testid="preview-item"]')
+    expect(items).toHaveLength(2)
+    expect(items[1].text()).toContain('1600×1200 · 400 B')
+    expect(items[0].find('img').attributes('src')).toBe('blob:test/0')
+  })
+
+  it('emits show-in-file with the preview node id', async () => {
+    const w = mountIt()
+    await flushPromises()
+    await w.findAll('[data-testid="show-in-file"]')[0].trigger('click')
+    expect(w.emitted('show-in-file')).toEqual([['a']])
+  })
+
+  it('revokes object URLs on unmount', async () => {
+    const w = mountIt()
+    await flushPromises()
+    w.unmount()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test/0')
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test/1')
   })
 
   it('swaps to the render when the decoded image arrives', async () => {
@@ -90,8 +115,9 @@ describe('OverviewMainImage', () => {
     await flushPromises()
     expect(w.find('[data-testid="decode-canvas"]').exists()).toBe(true)
     const tabs = w.findAll('[data-testid="source-preview"]')
-    expect(tabs[0].text()).toContain('160×120')
-    expect(tabs[1].text()).toContain('1600×1200')
+    const items = w.findAll('[data-testid="preview-item"]')
+    expect(items[0].text()).toContain('160×120')
+    expect(items[1].text()).toContain('1600×1200')
     await tabs[0].trigger('click')
     await flushPromises()
     expect(w.find('[data-testid="decode-canvas"]').exists()).toBe(false)

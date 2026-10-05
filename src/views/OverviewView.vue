@@ -2,7 +2,6 @@
 import CameraPanel from '../components/CameraPanel.vue'
 import OverviewMainImage from '../components/OverviewMainImage.vue'
 import PlaceholderPanel from '../components/PlaceholderPanel.vue'
-import PreviewGallery from '../components/PreviewGallery.vue'
 import { useInspection } from '../composables/useInspection'
 
 const {
@@ -13,7 +12,14 @@ const {
   render,
   renderFull,
   parseResult,
+  setMode,
+  selectNode,
 } = useInspection()
+
+function showInFile(nodeId: string) {
+  selectNode(nodeId)
+  setMode('technical')
+}
 </script>
 
 <template>
@@ -32,6 +38,7 @@ const {
           @render="render()"
           @render-full="renderFull()"
           @cancel="decoder.cancel()"
+          @show-in-file="showInFile"
         />
       </div>
       <!-- Slot: key facts card (#33). -->
@@ -39,13 +46,6 @@ const {
         <PlaceholderPanel title="Key facts" />
       </aside>
     </div>
-
-    <!-- Slot: previews strip (#32). -->
-    <section data-testid="slot-previews">
-      <PlaceholderPanel title="Previews">
-        <PreviewGallery v-if="reader" :reader="reader" :file-name="fileName" />
-      </PlaceholderPanel>
-    </section>
 
     <!-- Slot: metadata browser (#34). -->
     <section data-testid="slot-metadata">

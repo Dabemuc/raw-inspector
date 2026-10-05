@@ -6,6 +6,7 @@ import type { DecodedImage, DecodeStatus } from '../composables/useRawDecode'
 import type { DecodeStage } from '../workers/libraw-protocol'
 import DecodePanel from './DecodePanel.vue'
 import ImageViewer from './ImageViewer.vue'
+import PreviewStrip from './PreviewStrip.vue'
 
 const props = defineProps<{
   reader: RandomAccessReader | null
@@ -21,6 +22,7 @@ const emit = defineEmits<{
   render: []
   'render-full': []
   cancel: []
+  'show-in-file': [nodeId: string]
 }>()
 
 const STAGES: Record<DecodeStage, string> = {
@@ -33,8 +35,6 @@ const STAGES: Record<DecodeStage, string> = {
 type Source = 'render' | number
 
 const pixels = (p: PreviewInfo) => (p.width ?? 0) * (p.height ?? 0)
-const dims = (p: PreviewInfo) =>
-  p.width && p.height ? `${p.width}×${p.height}` : 'unknown size'
 
 /** Index of the largest preview by pixel count (bytes break ties). */
 const largest = computed(() => {
@@ -78,30 +78,33 @@ function revokeAll() {
   created = []
   urls.value = {}
 }
-watch([() => props.previews, () => props.reader], revokeAll)
 onBeforeUnmount(revokeAll)
 
-watch(
-  [previewIndex, () => props.previews, () => props.reader],
-  async ([index]) => {
-    const preview = index === null ? null : props.previews[index]
-    if (index === null || !preview || !props.reader || urls.value[index]) return
-    const gen = generation
-    try {
-      const bytes = await props.reader.read(preview.offset, preview.length)
-      if (gen !== generation) return
-      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {
-        type: preview.mime,
-      })
-      const url = URL.createObjectURL(blob)
-      created.push(url)
-      urls.value = { ...urls.value, [index]: url }
-    } catch {
-      // The viewer stays empty; the badge still offers rendering.
-    }
-  },
-  { immediate: true },
-)
+async function loadUrls() {
+  revokeAll()
+  const gen = generation
+  const reader = props.reader
+  if (!reader) return
+  await Promise.all(
+    props.previews.map(async (preview, index) => {
+      try {
+        const bytes = await reader.read(preview.offset, preview.length)
+        if (gen !== generation) return
+        const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {
+          type: preview.mime,
+        })
+        const url = URL.createObjectURL(blob)
+        created.push(url)
+        urls.value = { ...urls.value, [index]: url }
+      } catch {
+        // The thumbnail stays empty; the badge still offers rendering.
+      }
+    }),
+  )
+}
+watch([() => props.previews, () => props.reader], loadUrls, {
+  immediate: true,
+})
 
 const baseName = computed(
   () => props.fileName.replace(/\.[^./\\]+$/, '') || 'file',
@@ -123,32 +126,16 @@ const stageLabel = computed(() =>
 
 <template>
   <div class="main-image" data-testid="main-image">
-    <div
-      v-if="previews.length > 0"
-      class="sources"
-      role="group"
-      aria-label="Image source"
-    >
-      <button
-        type="button"
-        data-testid="source-render"
-        :disabled="!image"
-        :aria-pressed="source === 'render'"
-        @click="choice = 'render'"
-      >
-        Rendered RAW
-      </button>
-      <button
-        v-for="(p, i) in previews"
-        :key="p.nodeId + ':' + p.offset"
-        type="button"
-        data-testid="source-preview"
-        :aria-pressed="source === i"
-        @click="choice = i"
-      >
-        Preview {{ dims(p) }}
-      </button>
-    </div>
+    <PreviewStrip
+      v-if="previews.length > 0 || image"
+      :previews="previews"
+      :urls="urls"
+      :image="image"
+      :source="source"
+      :download-base="baseName"
+      @select="choice = $event"
+      @show-in-file="emit('show-in-file', $event)"
+    />
 
     <DecodePanel
       v-if="source === 'render' || source === null"
@@ -195,15 +182,6 @@ const stageLabel = computed(() =>
 <style scoped>
 .main-image {
   min-width: 0;
-}
-.sources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.sources [aria-pressed='true'] {
-  border-color: var(--accent);
 }
 .badge {
   display: flex;
