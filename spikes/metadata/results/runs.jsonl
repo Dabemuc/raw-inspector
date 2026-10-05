@@ -1,0 +1,16 @@
+{"engine":"none","file":"canon-r5.cr3","sizeMB":26.2,"peakRssMB":70,"baselineRssMB":70}
+{"engine":"exiftool","file":"canon-r5.cr3","sizeMB":26.2,"coldMs":908,"ok":true,"warmMs":564,"groups":{"SourceFile":1,"ExifTool":1,"System":7,"File":4,"QuickTime":21,"Canon":182,"IFD0":13,"ExifIFD":39,"CanonCustom":20,"GPS":1,"Track1":29,"Track2":26,"Track3":26,"Track4":150,"Track5":26,"XMP-xmp":1,"Composite":29},"peakRssMB":441,"baselineRssMB":70}
+{"engine":"exifreader","file":"canon-r5.cr3","sizeMB":26.2,"error":"Invalid image format","peakRssMB":108,"baselineRssMB":70}
+{"engine":"exifr","file":"canon-r5.cr3","sizeMB":26.2,"error":"Unknown file format","peakRssMB":84,"baselineRssMB":70}
+{"engine":"none","file":"fuji-xt3-26mp.raf","sizeMB":53.5,"peakRssMB":97,"baselineRssMB":97}
+{"engine":"exiftool","file":"fuji-xt3-26mp.raf","sizeMB":53.5,"coldMs":390,"ok":true,"warmMs":242,"groups":{"SourceFile":1,"ExifTool":1,"System":7,"File":11,"RAF":11,"IFD0":11,"ExifIFD":42,"FujiFilm":58,"InteropIFD":2,"PrintIM":1,"IFD1":10,"FujiIFD":12,"Composite":13},"peakRssMB":457,"baselineRssMB":97}
+{"engine":"exifreader","file":"fuji-xt3-26mp.raf","sizeMB":53.5,"error":"Invalid image format","peakRssMB":162,"baselineRssMB":97}
+{"engine":"exifr","file":"fuji-xt3-26mp.raf","sizeMB":53.5,"error":"Unknown file format","peakRssMB":111,"baselineRssMB":97}
+{"engine":"none","file":"sony-a7r4-61mp.arw","sizeMB":117.4,"peakRssMB":161,"baselineRssMB":161}
+{"engine":"exiftool","file":"sony-a7r4-61mp.arw","sizeMB":117.4,"coldMs":539,"ok":true,"warmMs":341,"groups":{"SourceFile":1,"ExifTool":1,"System":7,"File":4,"IFD0":15,"SubIFD":31,"XMP-xmp":1,"ExifIFD":39,"Sony":129,"InteropIFD":2,"PrintIM":1,"SR2":3,"SR2SubIFD":22,"SR2DataIFD":1,"SR2DataIFD1":1,"SR2DataIFD2":1,"SR2DataIFD3":1,"SR2DataIFD4":1,"SR2DataIFD5":1,"SR2DataIFD6":1,"SR2DataIFD7":1,"SR2DataIFD8":1,"SR2DataIFD9":1,"SR2DataIFD10":1,"SR2DataIFD11":1,"SR2DataIFD12":1,"IFD1":15,"Composite":18},"peakRssMB":591,"baselineRssMB":161}
+{"engine":"exifreader","file":"sony-a7r4-61mp.arw","sizeMB":117.4,"groups":{"xmp":3,"exif":61,"composite":3,"Thumbnail":17,"file":1},"coldMs":38,"peakRssMB":298,"baselineRssMB":161}
+{"engine":"exifr","file":"sony-a7r4-61mp.arw","sizeMB":117.4,"groups":{"xmp":1,"ifd0":17,"ifd1":14,"exif":38,"interop":2,"makerNote":37642},"coldMs":5,"peakRssMB":177,"baselineRssMB":161}
+{"engine":"none","file":"sony-a100.arw","sizeMB":9.7,"peakRssMB":53,"baselineRssMB":53}
+{"engine":"exiftool","file":"sony-a100.arw","sizeMB":9.7,"coldMs":479,"ok":true,"warmMs":304,"groups":{"SourceFile":1,"ExifTool":1,"System":7,"File":4,"IFD0":19,"ExifIFD":35,"Sony":11,"Minolta":151,"InteropIFD":2,"PrintIM":1,"MinoltaRaw":34,"IFD1":12,"Composite":14},"peakRssMB":380,"baselineRssMB":53}
+{"engine":"exifreader","file":"sony-a100.arw","sizeMB":9.7,"groups":{"exif":60,"composite":3,"Thumbnail":14,"file":1},"coldMs":6,"peakRssMB":77,"baselineRssMB":53}
+{"engine":"exifr","file":"sony-a100.arw","sizeMB":9.7,"groups":{"ifd0":21,"ifd1":11,"exif":34,"interop":2,"makerNote":24208},"coldMs":3,"peakRssMB":67,"baselineRssMB":53}

@@ -1,0 +1,234 @@
+{
+ "canon-350d.cr2": {
+  "size": 10586467,
+  "exiftool": {
+   "ms": 452,
+   "rssMB": 337,
+   "ok": true,
+   "tags": 230,
+   "groups": {
+    "SourceFile": 1,
+    "ExifTool": 1,
+    "System": 7,
+    "File": 4,
+    "IFD0": 14,
+    "ExifIFD": 26,
+    "Canon": 129,
+    "CanonCustom": 9,
+    "InteropIFD": 2,
+    "IFD1": 3,
+    "IFD2": 10,
+    "IFD3": 5,
+    "Composite": 19
+   },
+   "warmMs": 302
+  },
+  "exifreader": {
+   "ms": 16,
+   "groups": {
+    "makerNotes": 2,
+    "exif": 44,
+    "Thumbnail": 5,
+    "file": 1
+   }
+  },
+  "exifr": {
+   "ms": 2,
+   "groups": {
+    "ifd0": 13,
+    "ifd1": 2,
+    "exif": 25,
+    "interop": 2,
+    "makerNote": 8340
+   }
+  }
+ },
+ "leica-m8.dng": {
+  "size": 10575296,
+  "exiftool": {
+   "ms": 171,
+   "rssMB": 284,
+   "ok": true,
+   "tags": 116,
+   "groups": {
+    "SourceFile": 1,
+    "ExifTool": 1,
+    "System": 7,
+    "File": 4,
+    "IFD0": 38,
+    "SubIFD": 22,
+    "ExifIFD": 19,
+    "Leica": 15,
+    "Composite": 9
+   },
+   "warmMs": 164
+  },
+  "exifreader": {
+   "ms": 4,
+   "groups": {
+    "exif": 55,
+    "composite": 3,
+    "file": 1
+   }
+  },
+  "exifr": {
+   "ms": 2,
+   "groups": {
+    "ifd0": 39,
+    "exif": 19,
+    "makerNote": 220
+   }
+  }
+ },
+ "nikon-d70.nef": {
+  "size": 5488179,
+  "exiftool": {
+   "ms": 396,
+   "rssMB": 300,
+   "ok": true,
+   "tags": 187,
+   "groups": {
+    "SourceFile": 1,
+    "ExifTool": 1,
+    "System": 7,
+    "File": 4,
+    "IFD0": 23,
+    "SubIFD": 9,
+    "SubIFD1": 18,
+    "ExifIFD": 30,
+    "Nikon": 66,
+    "PreviewIFD": 8,
+    "Composite": 20
+   },
+   "warmMs": 386
+  },
+  "exifreader": {
+   "ms": 3,
+   "groups": {
+    "exif": 53,
+    "composite": 3,
+    "file": 1
+   }
+  },
+  "exifr": {
+   "ms": 1,
+   "groups": {
+    "ifd0": 23,
+    "exif": 29,
+    "makerNote": 33742
+   }
+  }
+ },
+ "olympus-e1.orf": {
+  "size": 10661632,
+  "exiftool": {
+   "ms": 254,
+   "rssMB": 345,
+   "ok": true,
+   "tags": 221,
+   "groups": {
+    "SourceFile": 1,
+    "ExifTool": 1,
+    "System": 7,
+    "File": 4,
+    "IFD0": 19,
+    "ExifIFD": 27,
+    "Olympus": 139,
+    "PrintIM": 1,
+    "IFD1": 7,
+    "Composite": 15
+   },
+   "warmMs": 248
+  },
+  "exifreader": {
+   "error": "Invalid image format"
+  },
+  "exifr": {
+   "ms": 1,
+   "groups": {
+    "ifd0": 20,
+    "ifd1": 6,
+    "exif": 26,
+    "makerNote": 3038
+   }
+  }
+ },
+ "panasonic-lx3.rw2": {
+  "size": 10952704,
+  "exiftool": {
+   "ms": 218,
+   "rssMB": 381,
+   "ok": true,
+   "tags": 194,
+   "groups": {
+    "SourceFile": 1,
+    "ExifTool": 1,
+    "System": 7,
+    "File": 10,
+    "IFD0": 40,
+    "PanasonicRaw": 22,
+    "ExifIFD": 32,
+    "Panasonic": 54,
+    "InteropIFD": 2,
+    "PrintIM": 1,
+    "IFD1": 9,
+    "Composite": 15
+   },
+   "warmMs": 223
+  },
+  "exifreader": {
+   "error": "Invalid image format"
+  },
+  "exifr": {
+   "ms": 1,
+   "groups": {
+    "ifd0": 38,
+    "exif": 12
+   }
+  }
+ },
+ "sony-a100.arw": {
+  "size": 10137572,
+  "exiftool": {
+   "ms": 277,
+   "rssMB": 398,
+   "ok": true,
+   "tags": 292,
+   "groups": {
+    "SourceFile": 1,
+    "ExifTool": 1,
+    "System": 7,
+    "File": 4,
+    "IFD0": 19,
+    "ExifIFD": 35,
+    "Sony": 11,
+    "Minolta": 151,
+    "InteropIFD": 2,
+    "PrintIM": 1,
+    "MinoltaRaw": 34,
+    "IFD1": 12,
+    "Composite": 14
+   },
+   "warmMs": 278
+  },
+  "exifreader": {
+   "ms": 4,
+   "groups": {
+    "exif": 60,
+    "composite": 3,
+    "Thumbnail": 14,
+    "file": 1
+   }
+  },
+  "exifr": {
+   "ms": 1,
+   "groups": {
+    "ifd0": 21,
+    "ifd1": 11,
+    "exif": 34,
+    "interop": 2,
+    "makerNote": 24208
+   }
+  }
+ }
+}
