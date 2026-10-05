@@ -65,6 +65,11 @@ const BASE_BRANCH = "main";
 // CI) before the PR is left open for a human.
 const MAX_FIX_ATTEMPTS = 2;
 
+// Rootless podman intermittently fails to create a container when several
+// start at once (crun: "write to /proc/sys/net/ipv4/ping_group_range").
+// Sandbox creation is retried this many times in total before giving up.
+const SANDBOX_CREATE_ATTEMPTS = 3;
+
 // ---------------------------------------------------------------------------
 // Host helpers (git / gh run on the host, with the host's credentials)
 // ---------------------------------------------------------------------------
@@ -82,6 +87,35 @@ const shOk = (cmd: string, args: string[], inherit = false): boolean => {
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Errors from a failed `podman run` include the full command line, env vars
+// and all; hide their values before printing.
+const redact = (err: unknown) =>
+  String(err).replace(/(-e [A-Z_]+=)\S+/g, "$1***");
+
+async function withCreateRetry<T>(
+  label: string,
+  start: () => Promise<T>,
+): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await start();
+    } catch (err) {
+      if (
+        attempt >= SANDBOX_CREATE_ATTEMPTS ||
+        !String(err).includes("create failed")
+      ) {
+        throw err;
+      }
+      // Jitter so parallel retries don't collide again.
+      const delay = attempt * 5_000 + Math.random() * 5_000;
+      console.warn(
+        `  ↻ ${label}: sandbox create failed, retrying in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${SANDBOX_CREATE_ATTEMPTS})`,
+      );
+      await sleep(delay);
+    }
+  }
+}
 
 const CONVENTIONAL_TITLE =
   /^(feat|fix|refactor|perf|test|docs|build|ci|chore|style|revert)(\([\w./-]+\))?!?: .+/;
@@ -245,7 +279,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   // -------------------------------------------------------------------------
   const settled = await Promise.allSettled(
     issues.map((issue) =>
-      sandcastle.run({
+      withCreateRetry(issue.branch, () =>
+        sandcastle.run({
         hooks,
         copyToWorktree,
         // Each agent starts on its own branch via branchStrategy on run().
@@ -266,6 +301,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
           BRANCH: issue.branch,
         },
       }),
+      ),
     ),
   );
 
@@ -273,15 +309,23 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   for (const [i, outcome] of settled.entries()) {
     if (outcome.status === "rejected") {
       console.error(
-        `  ✗ ${issues[i]!.id} (${issues[i]!.branch}) failed: ${outcome.reason}`,
+        `  ✗ ${issues[i]!.id} (${issues[i]!.branch}) failed: ${redact(outcome.reason)}`,
       );
     }
   }
 
-  // Only ship branches that actually produced commits.
-  // An agent that ran successfully but made no commits has nothing to ship.
+  // Ship every branch that is ahead of main, not only those that got commits
+  // in this run: an interrupted earlier run may have left finished work (and
+  // an open PR) behind, and the agent finds nothing left to commit.
   const completed = settled.flatMap((outcome, i) =>
-    outcome.status === "fulfilled" && outcome.value.commits.length > 0
+    outcome.status === "fulfilled" &&
+    Number(
+      sh("git", [
+        "rev-list",
+        "--count",
+        `${BASE_BRANCH}..${issues[i]!.branch}`,
+      ]),
+    ) > 0
       ? [{ issue: issues[i]!, result: outcome.value }]
       : [],
   );
@@ -289,7 +333,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   const completedBranches = completed.map((c) => c.issue.branch);
 
   console.log(
-    `\nExecution complete. ${completedBranches.length} branch(es) with commits:`,
+    `\nExecution complete. ${completedBranches.length} branch(es) ahead of ${BASE_BRANCH}:`,
   );
   for (const branch of completedBranches) {
     console.log(`  ${branch}`);
@@ -338,7 +382,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
 
       console.log(`#${pr}: conflicts or failing CI, running fixer…`);
       try {
-        const fix = await sandcastle.run({
+        const fix = await withCreateRetry(issue.branch, () =>
+          sandcastle.run({
           hooks,
           copyToWorktree,
           sandbox: podman(),
@@ -354,11 +399,12 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
             ISSUE_TITLE: issue.title,
             BRANCH: issue.branch,
           },
-        });
+          }),
+        );
         if (fix.commits.length === 0) break;
         sh("git", ["push", "origin", issue.branch]);
       } catch (err) {
-        console.error(`  ✗ ${issue.id}: fixer failed: ${err}`);
+        console.error(`  ✗ ${issue.id}: fixer failed: ${redact(err)}`);
         break;
       }
     }

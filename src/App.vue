@@ -1,49 +1,35 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import ByteMap from './components/ByteMap.vue'
-import HexViewer from './components/HexViewer.vue'
-import PreviewGallery from './components/PreviewGallery.vue'
-import PlaceholderPanel from './components/PlaceholderPanel.vue'
-import StructureTree from './components/StructureTree.vue'
+import { computed, ref } from 'vue'
 import FileProblem from './components/FileProblem.vue'
-import WarningsPanel from './components/WarningsPanel.vue'
 import SummaryHeader from './components/SummaryHeader.vue'
-import { createFileReader } from './core/io'
 import { fileProblem } from './core/model'
-import { useSelection } from './composables/useSelection'
-import CameraPanel from './components/CameraPanel.vue'
-import DecodePanel from './components/DecodePanel.vue'
-import { useRawDecode } from './composables/useRawDecode'
-import { useStructureParser } from './composables/useStructureParser'
+import { useInspection } from './composables/useInspection'
+import OverviewView from './views/OverviewView.vue'
+import TechnicalView from './views/TechnicalView.vue'
 
-const parser = useStructureParser()
-const { status, result, error, errorKind } = parser
+const inspection = useInspection()
+const { status, result, error, errorKind } = inspection.parser
 const showWarnings = ref(false)
 const problem = computed(() =>
   result.value ? fileProblem(result.value) : null,
 )
-const { setParseResult } = useSelection()
-watch(result, (r) => setParseResult(r), { immediate: true })
-
-const currentFile = ref<File | null>(null)
-const reader = computed(() =>
-  currentFile.value ? createFileReader(currentFile.value) : null,
-)
-
-const decoder = useRawDecode()
 
 const input = ref<HTMLInputElement | null>(null)
-const fileName = ref('')
 const dragging = ref(false)
-const tab = ref<'hex' | 'previews' | 'image'>('hex')
+const fileName = inspection.fileName
 
 function load(file: File | undefined) {
   if (!file) return
-  fileName.value = file.name
   showWarnings.value = false
-  currentFile.value = file
-  decoder.cancel()
-  parser.parse(file)
+  inspection.load(file)
+}
+
+function toggleWarnings() {
+  // The warnings panel lives in the technical view.
+  if (inspection.mode.value !== 'technical') {
+    inspection.setMode('technical')
+    showWarnings.value = true
+  } else showWarnings.value = !showWarnings.value
 }
 
 function pick() {
@@ -122,8 +108,10 @@ function onDrop(event: DragEvent) {
       <SummaryHeader
         :file-name="fileName"
         :result="result"
+        :mode="inspection.mode.value"
         @open="pick"
-        @show-warnings="showWarnings = !showWarnings"
+        @update:mode="inspection.setMode"
+        @show-warnings="toggleWarnings"
       />
       <FileProblem
         v-if="problem"
@@ -132,75 +120,12 @@ function onDrop(event: DragEvent) {
         :has-result="true"
         @open="pick"
       />
-      <WarningsPanel
-        v-if="showWarnings"
-        :result="result"
-        @close="showWarnings = false"
+      <TechnicalView
+        v-if="inspection.mode.value === 'technical'"
+        :show-warnings="showWarnings"
+        @close-warnings="showWarnings = false"
       />
-      <div class="layout">
-        <ByteMap class="area-map" />
-        <StructureTree class="area-tree" />
-        <div class="area-detail">
-          <div class="tabs" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="tab === 'hex'"
-              @click="tab = 'hex'"
-            >
-              Hex
-            </button>
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="tab === 'previews'"
-              @click="tab = 'previews'"
-            >
-              Previews
-            </button>
-            <button
-              type="button"
-              role="tab"
-              data-testid="tab-image"
-              :aria-selected="tab === 'image'"
-              @click="tab = 'image'"
-            >
-              Decoded image
-            </button>
-          </div>
-          <template v-if="tab === 'hex'">
-            <HexViewer v-if="reader" :reader="reader" />
-            <PlaceholderPanel v-else title="Hex viewer" />
-          </template>
-          <PlaceholderPanel v-else-if="tab === 'previews'" title="Previews">
-            <PreviewGallery
-              v-if="reader"
-              :reader="reader"
-              :file-name="fileName"
-            />
-          </PlaceholderPanel>
-          <PlaceholderPanel v-else title="Decoded image">
-            <DecodePanel
-              :status="decoder.status.value"
-              :progress="decoder.progress.value"
-              :image="decoder.image.value"
-              :error="decoder.error.value"
-              :file-name="fileName"
-              @decode="
-                (options) => currentFile && decoder.decode(currentFile, options)
-              "
-              @cancel="decoder.cancel()"
-            />
-          </PlaceholderPanel>
-          <PlaceholderPanel
-            v-if="tab === 'image'"
-            class="camera-panel"
-            title="Camera & colour"
-          >
-            <CameraPanel :metadata="decoder.metadata.value" />
-          </PlaceholderPanel>
-        </div>
-      </div>
+      <OverviewView v-else />
     </template>
   </div>
 </template>
@@ -257,40 +182,6 @@ function onDrop(event: DragEvent) {
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-.layout {
-  display: grid;
-  gap: 12px;
-  padding: 12px;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'map' 'tree' 'detail';
-}
-.area-map {
-  grid-area: map;
-}
-.area-tree {
-  grid-area: tree;
-}
-.area-detail {
-  grid-area: detail;
-  min-width: 0;
-}
-.camera-panel {
-  margin-top: 12px;
-}
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-.tabs [aria-selected='true'] {
-  border-color: var(--accent);
-}
-@media (min-width: 800px) {
-  .layout {
-    grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
-    grid-template-areas: 'map map' 'tree detail';
   }
 }
 </style>
