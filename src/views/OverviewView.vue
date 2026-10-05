@@ -3,7 +3,6 @@ import KeyFactsCard from '../components/KeyFactsCard.vue'
 import CameraPanel from '../components/CameraPanel.vue'
 import OverviewMainImage from '../components/OverviewMainImage.vue'
 import PlaceholderPanel from '../components/PlaceholderPanel.vue'
-import PreviewGallery from '../components/PreviewGallery.vue'
 import { computed } from 'vue'
 import { useInspection } from '../composables/useInspection'
 import { buildKeyFacts } from '../metadata/keyFacts'
@@ -18,6 +17,8 @@ const {
   parseResult,
   file,
   metadata,
+  setMode,
+  selectNode,
 } = useInspection()
 
 const facts = computed(() =>
@@ -26,6 +27,10 @@ const facts = computed(() =>
     fileSize: file.value?.size,
   }),
 )
+function showInFile(nodeId: string) {
+  selectNode(nodeId)
+  setMode('technical')
+}
 </script>
 
 <template>
@@ -44,6 +49,7 @@ const facts = computed(() =>
           @render="render()"
           @render-full="renderFull()"
           @cancel="decoder.cancel()"
+          @show-in-file="showInFile"
         />
       </div>
       <aside class="facts" data-testid="slot-key-facts">
@@ -53,13 +59,6 @@ const facts = computed(() =>
         />
       </aside>
     </div>
-
-    <!-- Slot: previews strip (#32). -->
-    <section data-testid="slot-previews">
-      <PlaceholderPanel title="Previews">
-        <PreviewGallery v-if="reader" :reader="reader" :file-name="fileName" />
-      </PlaceholderPanel>
-    </section>
 
     <!-- Slot: metadata browser (#34). -->
     <section data-testid="slot-metadata">
