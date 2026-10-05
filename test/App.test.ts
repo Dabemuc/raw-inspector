@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { collectIssues } from '../src/core/model'
 import { ref, shallowRef } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -47,6 +47,7 @@ vi.mock('../src/composables/useRawDecode', () => ({
 }))
 
 import App from '../src/App.vue'
+import { useInspection } from '../src/composables/useInspection'
 
 describe('App', () => {
   beforeEach(() => {
@@ -84,6 +85,21 @@ describe('App', () => {
     await w.vm.$nextTick()
     expect(w.find('[data-testid="summary"]').exists()).toBe(true)
     expect(w.get('[data-testid="render-status"]').text()).toContain('Rendering')
+  })
+
+  it('"Show in file" switches to technical mode and selects the node', async () => {
+    const w = mount(App)
+    await w.find('[data-testid="app"]').trigger('drop', {
+      dataTransfer: { files: [new File(['x'], 'a.dng')], types: ['Files'] },
+    })
+    status.value = 'done'
+    result.value = exampleResult
+    await flushPromises()
+    await w.findAll('[data-testid="show-in-file"]')[0].trigger('click')
+    expect(useInspection().mode.value).toBe('technical')
+    expect(useInspection().selectedNodeId.value).toBe(
+      exampleResult.previews[0].nodeId,
+    )
   })
 
   it('parses a picked file', async () => {
